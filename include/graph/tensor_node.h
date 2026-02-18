@@ -14,13 +14,15 @@ class OpNode;
 
 class TensorNode {
 public:
+    using Id = uint32_t;
+
     TensorNode() = delete;
 
     TensorNode(const TensorNode &) = delete;
 
     TensorNode(TensorNode &&) = delete;
 
-    TensorNode(const std::string &name, const IdGenerator::IdType &id, const std::vector<int64_t> &shape,
+    TensorNode(const std::string &name, const Id &id, const std::vector<int64_t> &shape,
                const DataType &data_type,
                const bool is_constant) : name_(name), id_(id), shape_(shape), data_type_(data_type),
                                          is_constant_(is_constant) {
@@ -48,6 +50,11 @@ public:
         return name_;
     }
 
+    [[nodiscard]] Id getId() const {
+        return id_;
+    }
+
+
     [[nodiscard]] DataType getDataType() const {
         return data_type_;
     }
@@ -67,7 +74,7 @@ public:
 
 private:
     std::string name_;
-    IdGenerator::IdType id_;
+    Id id_;
     std::vector<int64_t> shape_;
     DataType data_type_;
     bool is_constant_;

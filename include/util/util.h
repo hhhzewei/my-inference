@@ -4,25 +4,24 @@
 
 #ifndef MY_INFERENCE_UTIL_H
 #define MY_INFERENCE_UTIL_H
-#include <algorithm>
-#include <cstdint>
 #include <iostream>
 
+template<typename IdType, IdType START>
 class IdGenerator {
 public:
-    using IdType = uint64_t;
-
     IdGenerator() = default;
 
     IdGenerator(const IdGenerator &) = delete;
 
     IdGenerator(IdGenerator &&) = delete;
 
-    uint64_t nextId() {
-        if (counter == UINT64_MAX) {
+    IdType nextId() {
+        IdType result = counter;
+        ++counter;
+        if (counter == START) {
             std::cout << "id counter overflow" << std::endl;
         }
-        return counter++;
+        return result;
     }
 
 private:

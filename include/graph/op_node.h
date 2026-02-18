@@ -16,11 +16,17 @@ class TensorNode;
 
 class OpNode {
 public:
-    OpNode(std::string name, const IdGenerator::IdType &id, const OpType &type,
+    using Id = uint32_t;
+
+    OpNode(std::string name, const Id &id, const OpType &type,
            const std::vector<TensorNode *> &inputs, const std::vector<TensorNode *> &outputs,
            const std::map<std::string, AttributeValue> &attribute_map) : name_(std::move(name)), id_(id), type_(type),
                                                                          inputs_(inputs), outputs_(outputs),
                                                                          attributes_(attribute_map) {
+    }
+
+    [[nodiscard]] Id getId() const {
+        return id_;
     }
 
     [[nodiscard]] OpType getType() const {
@@ -66,7 +72,7 @@ private:
     }
 
     std::string name_;
-    uint64_t id_;
+    Id id_;
     OpType type_ = OpType::Unknown;
     std::vector<TensorNode *> inputs_;
     std::vector<std::vector<int64_t> > inputs_strides_;
