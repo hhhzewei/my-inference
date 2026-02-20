@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "data_type.h"
-#include "util/util.h"
 
 //前向声明避免循环include
 class OpNode;
@@ -37,12 +36,12 @@ public:
         std::memcpy(data, data_string.data(), data_string.size());
     }
 
-    void add_producer(OpNode *op) {
-        producers_.insert(op);
+    void addProducer(OpNode *op) {
+        producers_.push_back(op);
     }
 
-    void add_consumer(OpNode *op) {
-        consumers_.insert(op);
+    void addConsumer(OpNode *op) {
+        consumers_.push_back(op);
     }
 
 
@@ -72,6 +71,22 @@ public:
         shape_ = shape;
     }
 
+    [[nodiscard]] size_t getNumProducer() const {
+        return producers_.size();
+    }
+
+    [[nodiscard]] size_t getNumConsumer() const {
+        return consumers_.size();
+    }
+
+    std::vector<OpNode *> getProducers() {
+        return producers_;
+    }
+
+    std::vector<OpNode *> getConsumers() {
+        return consumers_;
+    }
+
 private:
     std::string name_;
     Id id_;
@@ -80,6 +95,6 @@ private:
     bool is_constant_;
     char *data = nullptr;
     std::vector<int64_t> strides_;
-    std::set<OpNode *> producers_{};
-    std::set<OpNode *> consumers_{};
+    std::vector<OpNode *> producers_{};
+    std::vector<OpNode *> consumers_{};
 };

@@ -6,7 +6,7 @@
 #define MY_INFERENCE_UTIL_H
 #include <iostream>
 
-template<typename IdType, IdType START>
+template<typename Id, Id START>
 class IdGenerator {
 public:
     IdGenerator() = default;
@@ -15,8 +15,8 @@ public:
 
     IdGenerator(IdGenerator &&) = delete;
 
-    IdType nextId() {
-        IdType result = counter;
+    Id nextId() {
+        Id result = counter;
         ++counter;
         if (counter == START) {
             std::cout << "id counter overflow" << std::endl;
@@ -25,6 +25,6 @@ public:
     }
 
 private:
-    IdType counter = 0;;
+    Id counter = 0;;
 };
 #endif //MY_INFERENCE_UTIL_H

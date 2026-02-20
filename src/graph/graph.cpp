@@ -15,16 +15,73 @@ Graph::Graph(const std::string &onnx_path) {
     const onnx::GraphProto &graph = model.graph();
     // 全局tensor map用于去重
     std::map<std::string, TensorNode *> global_tensor_map;
+    // 解析权重,优先
+    loadTensor(graph.initializer(), global_tensor_map);
     // 解析输入
     loadTensor<TensorType::INPUT>(graph.input(), global_tensor_map);
     // 解析中间张量
-    loadTensor<TensorType::MEDIUM>(graph.value_info(), global_tensor_map);
+    loadTensor<TensorType::INTERNAL>(graph.value_info(), global_tensor_map);
     // 解析输出
     loadTensor<TensorType::OUTPUT>(graph.output(), global_tensor_map);
-    // 解析权重
-    loadTensor(graph.initializer(), global_tensor_map);
     // 解析算子
     loadOp(graph.node(), global_tensor_map);
+}
+
+std::map<TensorNode::Id, size_t> Graph::tensorInDegrees() const {
+    std::map<TensorNode::Id, size_t> result;
+    for (const auto &[id, ptr]: tensor_repository_) {
+        result[id] = ptr->getNumProducer();
+    }
+    return result;
+}
+
+std::map<TensorNode::Id, size_t> Graph::tensorOutDegrees() const {
+    std::map<TensorNode::Id, size_t> result;
+    for (const auto &[id, ptr]: tensor_repository_) {
+        result[id] = ptr->getNumConsumer();
+    }
+    return result;
+}
+
+std::map<OpNode::Id, size_t> Graph::opInDegrees() const {
+    std::map<OpNode::Id, size_t> result;
+    for (const auto &[id, ptr]: op_repository_) {
+        result[id] = ptr->getNumInput();
+    }
+    return result;
+}
+
+std::map<OpNode::Id, size_t> Graph::opOutDegrees() const {
+    std::map<OpNode::Id, size_t> result;
+    for (const auto &[id, ptr]: op_repository_) {
+        result[id] = ptr->getNumOutput();
+    }
+    return result;
+}
+
+void Graph::shrinkTensor(const std::set<TensorId> &aliveIds) {
+    std::set<TensorId> deadIds;
+    for (auto &[id,p]: tensor_repository_) {
+        if (aliveIds.find(id) == aliveIds.end()) {
+            deadIds.insert(id);
+        }
+    }
+    for (const auto &id: deadIds) {
+        removeTensor<TensorType::ALL>(id);
+        eraseTensor(id);
+    }
+}
+
+void Graph::shrinkOp(const std::set<OpId> &aliveIds) {
+    std::set<OpId> deadIds;
+    for (auto &[id,p]: op_repository_) {
+        if (aliveIds.find(id) == aliveIds.end()) {
+            deadIds.insert(id);
+        }
+    }
+    for (const auto &id: deadIds) {
+        eraseOp(id);
+    }
 }
 
 void Graph::loadTensor(const google::protobuf::RepeatedPtrField<onnx::TensorProto> &tensor_list,
@@ -35,6 +92,7 @@ void Graph::loadTensor(const google::protobuf::RepeatedPtrField<onnx::TensorProt
         DataType data_type = getDataType(tensor.data_type());
         TensorNode *p = createTensor(name, shape, data_type, true, global_tensor_map);
         p->create_data(tensor.raw_data());
+        weights_.emplace(p->getId(), p);
     }
 }
 
@@ -43,11 +101,12 @@ TensorNode *Graph::createTensor(const std::string &name, const std::vector<int64
     if (const auto it = global_tensor_map.find(name); it != global_tensor_map.end()) {
         return it->second;
     }
-    const auto tensor_p = std::make_shared<TensorNode>(name, tensor_id_generator_.nextId(), shape, data_type,
-                                                       is_constant);
-    tensor_repository_.emplace(tensor_p->getId(), tensor_p);
-    global_tensor_map.emplace(tensor_p->getName(), tensor_p.get());
-    return tensor_p.get();
+    auto tensor_p = std::make_unique<TensorNode>(name, tensor_id_generator_.nextId(), shape, data_type,
+                                                 is_constant);
+    auto it = tensor_repository_.emplace(tensor_p->getId(), std::move(tensor_p));
+    TensorNode *raw_p = it.first->second.get();
+    global_tensor_map.emplace(name, raw_p);
+    return raw_p;
 }
 
 void Graph::loadOp(const google::protobuf::RepeatedPtrField<onnx::NodeProto> &node_list,
@@ -58,6 +117,7 @@ void Graph::loadOp(const google::protobuf::RepeatedPtrField<onnx::NodeProto> &no
             // 常量节点，即张量
             const std::string &tensor_name = node.output(0);
             TensorNode *ptr = global_tensor_map.find(tensor_name)->second;
+            weights_.emplace(ptr->getId(), ptr);
             const auto &tensorProto = node.attribute(0).t();
             if (tensorProto.has_raw_data()) {
                 ptr->create_data(tensorProto.raw_data());
@@ -86,22 +146,23 @@ void Graph::loadOp(const google::protobuf::RepeatedPtrField<onnx::NodeProto> &no
 }
 
 void Graph::createOp(const std::string &name, OpType type,
-                       const std::vector<TensorNode *> &op_inputs, const std::vector<TensorNode *> &op_outputs,
-                       const std::map<std::string, AttributeValue> &attribute_map,
-                       std::map<std::string, OpNode *> &global_op_map
+                     const std::vector<TensorNode *> &op_inputs, const std::vector<TensorNode *> &op_outputs,
+                     const std::map<std::string, AttributeValue> &attribute_map,
+                     std::map<std::string, OpNode *> &global_op_map
 ) {
     const auto it = global_op_map.find(name);
     if (it != global_op_map.end()) {
         return;
     }
-    const auto ptr = std::make_shared<OpNode>(name, op_id_generator_.nextId(), type, op_inputs, op_outputs, attribute_map);
-    global_op_map[name] = ptr.get();
-    op_repository_.emplace(ptr->getId(), ptr);
-    //
+    auto ptr = std::make_unique<OpNode>(name, op_id_generator_.nextId(), type, op_inputs, op_outputs,
+                                        attribute_map);
+    OpNode* raw_p=ptr.get();
+    global_op_map.emplace(name,raw_p);
     for (TensorNode *input: op_inputs) {
-        input->add_consumer(ptr.get());
+        input->addConsumer(raw_p);
     }
     for (TensorNode *output: op_outputs) {
-        output->add_producer(ptr.get());
+        output->addProducer(raw_p);
     }
+    op_repository_.emplace(ptr->getId(), std::move(ptr));
 }

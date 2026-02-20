@@ -41,6 +41,22 @@ public:
         return device_.type;
     }
 
+    [[nodiscard]] size_t getNumInput() const {
+        return inputs_.size();
+    }
+
+    [[nodiscard]] size_t getNumOutput() const {
+        return outputs_.size();
+    }
+
+    std::vector<TensorNode *> getInputs() {
+        return inputs_;
+    }
+
+    std::vector<TensorNode *> getOutputs() {
+        return outputs_;
+    }
+
 private:
     void broadcast() {
         if (isElementWise(type_)) {
