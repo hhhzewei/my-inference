@@ -5,10 +5,11 @@
 #include <onnx/onnx-ml.pb.h>
 #include <fstream>
 #include <iostream>
+#include "util/onnx_util.h"
 
-#include "graph/attribute_value.h"
+using namespace my_inference;
 
-void loadOnnxModel(const std::string &path, onnx::ModelProto &model) {
+void my_inference::loadOnnxModel(const std::string &path, onnx::ModelProto &model) {
     // 2. 以二进制流方式读取文件
     std::ifstream input(path, std::ios::ate | std::ios::binary);
     if (!input) {
@@ -16,7 +17,7 @@ void loadOnnxModel(const std::string &path, onnx::ModelProto &model) {
         return;
     }
 
-    std::streamsize size = input.tellg();
+    input.tellg();
     input.seekg(0, std::ios::beg);
 
     // 3. 解析 Protobuf
@@ -30,7 +31,7 @@ void loadOnnxModel(const std::string &path, onnx::ModelProto &model) {
     std::cout << "生成者: " << model.producer_name() << std::endl;
 }
 
-std::map<std::string, AttributeValue> loadAttribute(
+std::map<std::string, AttributeValue> my_inference::loadAttribute(
     const google::protobuf::RepeatedPtrField<onnx::AttributeProto> &attributeList) {
     std::map<std::string, AttributeValue> map;
     for (auto &attribute: attributeList) {

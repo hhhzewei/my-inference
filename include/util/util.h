@@ -1,30 +1,24 @@
 //
-// Created by hzw on 2026/2/17.
+// Created by hzw on 2026/2/22.
 //
 
 #ifndef MY_INFERENCE_UTIL_H
 #define MY_INFERENCE_UTIL_H
-#include <iostream>
+#include <vector>
 
-template<typename Id, Id START>
-class IdGenerator {
-public:
-    IdGenerator() = default;
-
-    IdGenerator(const IdGenerator &) = delete;
-
-    IdGenerator(IdGenerator &&) = delete;
-
-    Id nextId() {
-        Id result = counter;
-        ++counter;
-        if (counter == START) {
-            std::cout << "id counter overflow" << std::endl;
+namespace my_inference {
+    template<typename T>
+    void swapAndPop(std::vector<T> &vec, T target) {
+        for (int i = 0; i < vec.size();) {
+            if (vec[i] == target) {
+                vec[i] = vec.back();
+                vec.pop_back();
+            } else {
+                ++i;
+            }
         }
-        return result;
     }
+}
 
-private:
-    Id counter = 0;;
-};
+
 #endif //MY_INFERENCE_UTIL_H

@@ -6,11 +6,12 @@
 #define MY_INFERENCE_DEAD_CODE_ELIMINATION_H
 #include "optimizer.h"
 
-
-class DeadCodeElimination : Optimizer {
-public:
-    void operator()(Graph &graph) override;
-};
+namespace my_inference {
+    class DeadCodeElimination : Optimizer {
+    public:
+        void operator()(Graph &graph) override;
+    };
+}
 
 
 #endif //MY_INFERENCE_DEAD_CODE_ELIMINATION_H

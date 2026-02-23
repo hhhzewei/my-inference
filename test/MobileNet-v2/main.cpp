@@ -5,8 +5,8 @@
 #include "optimize/dead_code_elimination.h"
 
 int main(int argc, char *argv[]) {
-    Graph graph("../../../onnx/MobileNet-v2.onnx");
-    DeadCodeElimination dead_code_elimination;
+    my_inference::Graph graph("../../../onnx/MobileNet-v2.onnx");
+    my_inference::DeadCodeElimination dead_code_elimination;
     dead_code_elimination(graph);
     return 0;
 }

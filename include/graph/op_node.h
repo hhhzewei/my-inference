@@ -12,87 +12,122 @@
 #include "kernel/device.h"
 
 //前向声明避免循环include
-class TensorNode;
+namespace my_inference {
+    class TensorNode;
 
-class OpNode {
-public:
-    using Id = uint32_t;
+    class OpNode {
+    public:
+        using Id = uint32_t;
 
-    OpNode(std::string name, const Id &id, const OpType &type,
-           const std::vector<TensorNode *> &inputs, const std::vector<TensorNode *> &outputs,
-           const std::map<std::string, AttributeValue> &attribute_map) : name_(std::move(name)), id_(id), type_(type),
-                                                                         inputs_(inputs), outputs_(outputs),
-                                                                         attributes_(attribute_map) {
-    }
+        OpNode(std::string name, const Id &id, const OpType &type,
+               const std::vector<TensorNode *> &inputs, const std::vector<TensorNode *> &outputs,
+               const std::map<std::string, AttributeValue> &attribute_map) : name_(std::move(name)), id_(id),
+                                                                             type_(type),
+                                                                             inputs_(inputs), outputs_(outputs),
+                                                                             attributes_(attribute_map) {
+        }
 
-    [[nodiscard]] Id getId() const {
-        return id_;
-    }
+        [[nodiscard]] Id id() const {
+            return id_;
+        }
 
-    [[nodiscard]] OpType getType() const {
-        return type_;
-    }
+        [[nodiscard]] OpType type() const {
+            return type_;
+        }
 
-    [[nodiscard]] DataType getDataType() const {
-        return inputs_[0]->getDataType();
-    }
+        [[nodiscard]] DataType dataType() const {
+            return inputs_[0]->dataType();
+        }
 
-    [[nodiscard]] DeviceType getDeviceType() const {
-        return device_.type;
-    }
+        [[nodiscard]] DeviceType deviceType() const {
+            return device_.type;
+        }
 
-    [[nodiscard]] size_t getNumInput() const {
-        return inputs_.size();
-    }
-
-    [[nodiscard]] size_t getNumOutput() const {
-        return outputs_.size();
-    }
-
-    std::vector<TensorNode *> getInputs() {
-        return inputs_;
-    }
-
-    std::vector<TensorNode *> getOutputs() {
-        return outputs_;
-    }
-
-private:
-    void broadcast() {
-        if (isElementWise(type_)) {
-            inputs_strides_.reserve(inputs_.size());
-            const std::vector<int64_t> &standard_shape = outputs_[0]->getShape();
-            for (TensorNode *input: inputs_) {
-                std::vector<int64_t> shape = input->getShape();
-                // 左端补1
-                if (shape.size() < standard_shape.size()) {
-                    shape.insert(shape.begin(), standard_shape.size() - shape.size(), 1);
-                    input->setShape(shape);
+        [[nodiscard]] size_t numInput() const {
+            size_t count = 0;
+            for (const TensorNode *tensor: inputs_) {
+                if (tensor != nullptr) {
+                    ++count;
                 }
-                std::vector<int64_t> strides(shape.size());
-                int64_t stride = 1;
-                // 生成stride
-                for (int j = static_cast<int>(shape.size()) - 1; j >= 0; --j) {
-                    if (shape[j] == standard_shape[j]) {
-                        strides[j] = stride;
-                    } else if (shape[j] == 1) {
-                        strides[j] = 0;
-                    } else {
-                        std::cout << "Tensor Shape Error. Name:  " << input->getName() << std::endl;
+            }
+            return count;
+        }
+
+        [[nodiscard]] size_t numOutput() const {
+            size_t count = 0;
+            for (const TensorNode *tensor: outputs_) {
+                if (tensor != nullptr) {
+                    ++count;
+                }
+            }
+            return count;
+        }
+
+        [[nodiscard]] std::vector<TensorNode *> inputs() const {
+            return inputs_;
+        }
+
+        // void removeInput(const TensorNode *tensor) {
+        //     for (auto &input: inputs_) {
+        //         if (input == tensor) {
+        //             input = nullptr;
+        //         }
+        //     }
+        // }
+
+        [[nodiscard]] std::vector<TensorNode *> outputs() const {
+            return outputs_;
+        }
+
+        // void removeOutput(const TensorNode *tensor) {
+        //     for (auto &output: outputs_) {
+        //         if (output == tensor) {
+        //             output = nullptr;
+        //         }
+        //     }
+        // }
+
+        [[nodiscard]] std::map<std::string, AttributeValue> attributeMap() const {
+            return attributes_;
+        }
+
+    private:
+        void broadcast() {
+            if (isElementWise(type_)) {
+                inputs_strides_.reserve(inputs_.size());
+                const std::vector<int64_t> &standard_shape = outputs_[0]->shape();
+                for (TensorNode *input: inputs_) {
+                    std::vector<int64_t> shape = input->shape();
+                    // 左端补1
+                    if (shape.size() < standard_shape.size()) {
+                        shape.insert(shape.begin(), standard_shape.size() - shape.size(), 1);
+                        input->setShape(shape);
                     }
-                    stride *= shape[j];
+                    std::vector<int64_t> strides(shape.size());
+                    int64_t stride = 1;
+                    // 生成stride
+                    for (int j = static_cast<int>(shape.size()) - 1; j >= 0; --j) {
+                        if (shape[j] == standard_shape[j]) {
+                            strides[j] = stride;
+                        } else if (shape[j] == 1) {
+                            strides[j] = 0;
+                        } else {
+                            std::cout << "Tensor Shape Error. Name:  " << input->name() << std::endl;
+                        }
+                        stride *= shape[j];
+                    }
+                    inputs_strides_.push_back(std::move(strides));
                 }
-                inputs_strides_.push_back(std::move(strides));
             }
         }
-    }
 
-    std::string name_;
-    Id id_;
-    OpType type_ = OpType::Unknown;
-    std::vector<TensorNode *> inputs_;
-    std::vector<std::vector<int64_t> > inputs_strides_;
-    std::vector<TensorNode *> outputs_;
-    std::map<std::string, AttributeValue> attributes_;
-    Device device_ = {DeviceType::CPU, 0};
-};
+        std::string name_;
+        Id id_;
+        OpType type_ = OpType::Unknown;
+        std::vector<TensorNode *> inputs_;
+        std::vector<std::vector<int64_t> > inputs_strides_;
+        std::vector<TensorNode *> outputs_;
+        std::map<std::string, AttributeValue> attributes_;
+        Device device_ = {DeviceType::CPU, 0};
+    };
+}

@@ -7,19 +7,22 @@
 #include "pass_type.h"
 #include "graph/graph.h"
 
-class Optimizer {
-public:
-    virtual ~Optimizer() = default;
+namespace my_inference {
+    class Optimizer {
+    public:
+        virtual ~Optimizer() = default;
 
-    virtual void operator()(Graph &graph) = 0;
-};
+        virtual void operator()(Graph &graph) = 0;
+    };
 
-inline Optimizer *getOptimizer(const PassType &type) {
-    static std::map<PassType, Optimizer *> map = {};
-    const auto it = map.find(type);
-    if (it == map.end()) {
-        std::cout << "Cant find pass" << std::endl;
+    inline Optimizer *getOptimizer(const PassType &type) {
+        static std::map<PassType, Optimizer *> map = {};
+        const auto it = map.find(type);
+        if (it == map.end()) {
+            std::cout << "Cant find pass" << std::endl;
+        }
+        return it->second;
     }
-    return it->second;
 }
+
 #endif //MY_INFERENCE_OPTIMIZE_PASS_H
