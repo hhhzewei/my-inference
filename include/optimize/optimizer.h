@@ -4,8 +4,8 @@
 
 #ifndef MY_INFERENCE_OPTIMIZE_PASS_H
 #define MY_INFERENCE_OPTIMIZE_PASS_H
-#include "pass_type.h"
 #include "graph/graph.h"
+#include "optimize/pass_type.h"
 
 namespace my_inference {
     class Optimizer {

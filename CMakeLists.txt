@@ -18,10 +18,14 @@ find_package(protobuf CONFIG REQUIRED)
 find_package(onnx CONFIG REQUIRED)
 
 add_library(my_inference STATIC src/graph/graph.cpp
-        src/util/onnx_util.cpp)
+        src/graph/data_type_infer.cpp
+        src/optimize/dead_code_elimination.cpp
+        src/util/onnx_util.cpp
+        )
 
 target_link_libraries(my_inference
         PUBLIC ONNX::onnx ONNX::onnx_proto
         PUBLIC protobuf::libupb protobuf::libprotoc protobuf::libprotobuf protobuf::libprotobuf-lite)
 
 add_subdirectory(test/MobileNet-v2)
+add_subdirectory(test/optimize)

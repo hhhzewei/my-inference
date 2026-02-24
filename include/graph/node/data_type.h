@@ -1,9 +1,7 @@
 //
 // Created by hzw on 2026/2/8.
 //
-
-#ifndef MY_INFERENCE_DATA_TYPE_H
-#define MY_INFERENCE_DATA_TYPE_H
+#pragma once
 
 #include <unordered_map>
 #include <onnx/onnx_pb.h>
@@ -12,16 +10,18 @@
 namespace my_inference {
     enum class DataType {
         Unknown = 0,
-        Float32,
+        Bool,
         Uint8,
         Int32,
         Int64,
-        Float16
+        Float16,
+        Float32,
     };
 
-    inline DataType getDataType(const int32_t &onnx_type) {
+    inline DataType getDataType(const int &onnx_type) {
         // 使用静态 map，确保只初始化一次
         static const std::unordered_map<int32_t, DataType> type_map = {
+            {onnx::TensorProto_DataType_UNDEFINED, DataType::Unknown},
             {onnx::TensorProto_DataType_FLOAT, DataType::Float32},
             {onnx::TensorProto_DataType_UINT8, DataType::Uint8},
             {onnx::TensorProto_DataType_INT32, DataType::Int32},
@@ -37,5 +37,3 @@ namespace my_inference {
         return DataType::Unknown;
     }
 }
-
-#endif //MY_INFERENCE_DATA_TYPE_H

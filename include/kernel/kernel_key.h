@@ -3,9 +3,7 @@
 //
 #pragma once
 
-#include "graph/data_type.h"
-#include "graph/op_node.h"
-#include "graph/op_type.h"
+#include "graph/node/op_node.h"
 
 namespace my_inference {
     using KernelKey = uint64_t;

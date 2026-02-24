@@ -2,14 +2,24 @@
 // Created by hzw on 2026/2/8.
 //
 
-#include <memory>
 #include "graph/graph.h"
-#include "graph/data_type.h"
+#include "graph/infer/data_type_infer.h"
 #include "util/onnx_util.h"
 
 using namespace my_inference;
 
-Graph::Graph(const std::string &onnx_path) {
+std::unique_ptr<Graph> Graph::make(const std::string &onnx_path) {
+    auto graph = std::make_unique<Graph>();
+    graph->init(onnx_path);
+    return graph;
+}
+
+void Graph::init(const std::string &onnx_path) {
+    loadOnnx(onnx_path);
+    inferDataTypeAndShape();
+}
+
+void Graph::loadOnnx(const std::string &onnx_path) {
     onnx::ModelProto model;
     loadOnnxModel(onnx_path, model);
     const onnx::GraphProto &graph = model.graph();
@@ -31,7 +41,10 @@ void Graph::loadTensor(const google::protobuf::RepeatedPtrField<onnx::TensorProt
                        std::map<std::string, TensorNode *> &global_tensor_map) {
     for (const onnx::TensorProto &tensor: tensor_list) {
         const std::string &name = tensor.name();
-        std::vector shape(tensor.dims().begin(), tensor.dims().end());
+        std::vector<TensorDim> shape(tensor.dims().begin(), tensor.dims().end());
+        if (!tensor.has_data_type()) {
+            std::cout << "Initializer hasn't data type!" << std::endl;
+        }
         DataType data_type = getDataType(tensor.data_type());
         TensorNode *p = createTensor(name, shape, data_type, true, global_tensor_map);
         p->create_data(tensor.raw_data());
@@ -39,7 +52,7 @@ void Graph::loadTensor(const google::protobuf::RepeatedPtrField<onnx::TensorProt
     }
 }
 
-TensorNode *Graph::createTensor(const std::string &name, const std::vector<int64_t> &shape, const DataType &data_type,
+TensorNode *Graph::createTensor(const std::string &name, const std::vector<TensorDim> &shape, const DataType &data_type,
                                 const bool &is_constant, std::map<std::string, TensorNode *> &global_tensor_map) {
     if (const auto it = global_tensor_map.find(name); it != global_tensor_map.end()) {
         return it->second;
@@ -92,8 +105,7 @@ void Graph::loadOp(const google::protobuf::RepeatedPtrField<onnx::NodeProto> &no
 void Graph::createOp(const std::string &name, OpType type,
                      const std::vector<TensorNode *> &op_inputs, const std::vector<TensorNode *> &op_outputs,
                      const std::map<std::string, AttributeValue> &attribute_map,
-                     std::map<std::string, OpNode *> &global_op_map
-) {
+                     std::map<std::string, OpNode *> &global_op_map) {
     const auto it = global_op_map.find(name);
     if (it != global_op_map.end()) {
         return;
@@ -109,6 +121,13 @@ void Graph::createOp(const std::string &name, OpType type,
         output->setProducer(raw_p);
     }
     op_repository_.emplace(ptr->id(), std::move(ptr));
+}
+
+void Graph::inferDataTypeAndShape() const {
+    auto op_func = [](OpNode *op) {
+        inferDataType(op);
+    };
+    forwardTopoTraverse(op_func, default_tensor_func);
 }
 
 [[nodiscard]] std::queue<TensorNode *> Graph::zeroInDegreeTensor() const {

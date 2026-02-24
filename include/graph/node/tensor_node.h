@@ -5,12 +5,13 @@
 
 #include <vector>
 
-#include "data_type.h"
+#include "graph/node/data_type.h"
+#include "graph/node/tensor_dim.h"
 #include "util/util.h"
 
-//前向声明避免循环include
 
 namespace my_inference {
+    //前向声明避免循环include
     class OpNode;
 
     class TensorNode {
@@ -23,7 +24,7 @@ namespace my_inference {
 
         TensorNode(TensorNode &&) = delete;
 
-        TensorNode(const std::string &name, const Id &id, const std::vector<int64_t> &shape,
+        TensorNode(const std::string &name, const Id &id, const std::vector<TensorDim> &shape,
                    const DataType &data_type,
                    const bool is_constant) : name_(name), id_(id), shape_(shape), data_type_(data_type),
                                              is_constant_(is_constant) {
@@ -49,16 +50,24 @@ namespace my_inference {
             return data_type_;
         }
 
-        std::vector<int64_t> shape() {
+        void setDataType(const DataType data_type) {
+            data_type_ = data_type;
+        }
+
+        [[nodiscard]] bool needInferDataType() const {
+            return data_type_ == DataType::Unknown;
+        }
+
+        std::vector<TensorDim> shape() {
             return shape_;
         }
 
 
-        [[nodiscard]] const std::vector<int64_t> &shape() const {
+        [[nodiscard]] const std::vector<TensorDim> &shape() const {
             return shape_;
         }
 
-        void setShape(const std::vector<int64_t> &shape) {
+        void setShape(const std::vector<TensorDim> &shape) {
             shape_ = shape;
         }
 
@@ -119,7 +128,7 @@ namespace my_inference {
     private:
         std::string name_;
         Id id_;
-        std::vector<int64_t> shape_;
+        std::vector<TensorDim> shape_;
         DataType data_type_;
         bool is_constant_;
         char *data_ = nullptr;

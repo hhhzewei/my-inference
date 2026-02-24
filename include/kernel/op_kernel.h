@@ -2,8 +2,8 @@
 // Created by hzw on 2026/2/17.
 //
 #pragma once
-#include "kernel_key.h"
-#include "graph/op_node.h"
+#include "kernel/kernel_key.h"
+#include "graph/node/op_node.h"
 
 namespace my_inference {
     class OpKernel {

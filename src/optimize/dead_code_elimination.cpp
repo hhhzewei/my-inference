@@ -9,10 +9,10 @@ using namespace my_inference;
 void DeadCodeElimination::operator()(Graph &graph) {
     std::set<OpNode::Id> used_op;
     std::set<TensorNode::Id> used_tensor;
-    auto op_func = [&](OpNode *p) {
+    auto op_func = [&](const OpNode *p) {
         used_op.insert(p->id());
     };
-    auto tensor_func = [&](TensorNode *p) {
+    auto tensor_func = [&](const TensorNode *p) {
         used_tensor.insert(p->id());
     };
     graph.backwardTopoTraverse(op_func, tensor_func);

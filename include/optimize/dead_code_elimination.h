@@ -4,7 +4,7 @@
 
 #ifndef MY_INFERENCE_DEAD_CODE_ELIMINATION_H
 #define MY_INFERENCE_DEAD_CODE_ELIMINATION_H
-#include "optimizer.h"
+#include "optimize/optimizer.h"
 
 namespace my_inference {
     class DeadCodeElimination : Optimizer {

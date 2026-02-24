@@ -11,8 +11,12 @@ namespace my_inference {
     class AttributeValue {
     public:
         template<typename T>
-        explicit AttributeValue(T value) {
-            this->value_ = value;
+        explicit AttributeValue(T value) : value_(value) {
+        }
+
+        template<typename T>
+        T get() {
+            return std::get<T>(value_);
         }
 
     private:
