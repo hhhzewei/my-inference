@@ -8,20 +8,20 @@
 #include <string>
 #include <variant>
 
-#include "expr/expr_op_type.h"
+#include "expr/expr_type.h"
 
 namespace my_inference {
     class Expr {
         class ExprImpl {
         public:
-            explicit ExprImpl(const int64_t &value) : type(ExprOpType::Value), content_(value), cur_value_(value) {
+            explicit ExprImpl(const int64_t &value) : type(ExprType::Value), content_(value), cur_value_(value) {
             }
 
-            explicit ExprImpl(const std::string &param) : type(ExprOpType::Param), content_(param) {
+            explicit ExprImpl(const std::string &param) : type(ExprType::Param), content_(param) {
             }
 
 
-            ExprImpl(const ExprOpType &type, const std::shared_ptr<ExprImpl> &l,
+            ExprImpl(const ExprType &type, const std::shared_ptr<ExprImpl> &l,
                      const std::shared_ptr<ExprImpl> &r) : type(type), content_(std::pair{l, r}) {
             }
 
@@ -33,7 +33,7 @@ namespace my_inference {
             using ContentType = std::variant<int64_t, std::string, std::pair<std::shared_ptr<ExprImpl>, std::shared_ptr<
                 ExprImpl> > >;
 
-            ExprOpType type;
+            ExprType type;
             ContentType content_;
             int64_t cur_value_ = 0;
             friend class Expr;
@@ -46,16 +46,16 @@ namespace my_inference {
         explicit Expr(const std::string &param) : impl_(std::make_shared<ExprImpl>(param)) {
         }
 
-        Expr(const ExprOpType &type, const Expr &l, const Expr &r) : impl_(
+        Expr(const ExprType &type, const Expr &l, const Expr &r) : impl_(
             std::make_shared<ExprImpl>(type, l.impl_, r.impl_)) {
         }
 
         [[nodiscard]] bool isValue() const {
-            return impl_->type == ExprOpType::Value;
+            return impl_->type == ExprType::Value;
         }
 
         [[nodiscard]] bool isParam() const {
-            return impl_->type == ExprOpType::Param;
+            return impl_->type == ExprType::Param;
         }
 
         [[nodiscard]] int64_t value() const {
@@ -67,95 +67,88 @@ namespace my_inference {
         }
 
         friend bool operator!=(const Expr &e1, const Expr &e2) {
-            return *(e1.impl_) != *(e2.impl_);
+            return *e1.impl_ != *e2.impl_;
         }
 
         friend Expr operator+(const Expr &l, const Expr &r) {
-            if (l.isValue() && r.isValue()) {
-                return Expr(l.value() + r.value());
-            }
-            return {ExprOpType::Add, l, r};
+            return make<ExprType::Add>(l, r);
         }
 
         friend Expr operator+(const Expr &l, const int64_t &r) {
-            if (l.isValue()) {
-                return Expr(l.value() + r);
-            }
-            return {ExprOpType::Add, l, Expr(r)};
+            return make<ExprType::Add>(l, r);
         }
 
         friend Expr operator+(const int64_t &l, const Expr &r) {
-            if (r.isValue()) {
-                return Expr(l + r.value());
-            }
-            return {ExprOpType::Add, Expr(l), r};
+            return make<ExprType::Add>(l, r);
         }
 
         friend Expr operator-(const Expr &l, const Expr &r) {
-            if (l.isValue() && r.isValue()) {
-                return Expr(l.value() - r.value());
-            }
-            return {ExprOpType::Sub, l, r};
+            return make<ExprType::Sub>(l, r);
         }
 
         friend Expr operator-(const Expr &l, const int64_t &r) {
-            if (l.isValue()) {
-                return Expr(l.value() - r);
-            }
-            return {ExprOpType::Sub, l, Expr(r)};
+            return make<ExprType::Sub>(l, r);
         }
 
         friend Expr operator-(const int64_t &l, const Expr &r) {
-            if (r.isValue()) {
-                return Expr(l - r.value());
-            }
-            return {ExprOpType::Sub, Expr(l), r};
+            return make<ExprType::Sub>(l, r);
         }
 
         friend Expr operator*(const Expr &l, const Expr &r) {
-            if (l.isValue() && r.isValue()) {
-                return Expr(l.value() * r.value());
-            }
-            return {ExprOpType::Mul, l, r};
+            return make<ExprType::Mul>(l, r);
         }
 
         friend Expr operator*(const Expr &l, const int64_t &r) {
-            if (l.isValue()) {
-                return Expr(l.value() * r);
-            }
-            return {ExprOpType::Mul, l, Expr(r)};
+            return make<ExprType::Mul>(l, r);
         }
 
         friend Expr operator*(const int64_t &l, const Expr &r) {
-            if (r.isValue()) {
-                return Expr(l * r.value());
-            }
-            return {ExprOpType::Mul, Expr(l), r};
+            return make<ExprType::Mul>(l, r);
         }
 
         friend Expr operator/(const Expr &l, const Expr &r) {
-            if (l.isValue() && r.isValue()) {
-                return Expr(l.value() * r.value());
-            }
-            return {ExprOpType::Div, l, r};
+            return make<ExprType::Div>(l, r);
         }
 
 
         friend Expr operator/(const Expr &l, const int64_t &r) {
-            if (l.isValue()) {
-                return Expr(l.value() / r);
-            }
-            return {ExprOpType::Div, l, Expr(r)};
+            return make<ExprType::Div>(l, r);
         }
 
         friend Expr operator/(const int64_t &l, const Expr &r) {
-            if (r.isValue()) {
-                return Expr(l / r.value());
-            }
-            return {ExprOpType::Div, Expr(l), r};
+            return make<ExprType::Div>(l, r);
         }
 
     private:
+        template<ExprType Type, typename T, typename U>
+        static Expr make(const T &l, const U &r) {
+            if (isValue(l) && isValue(r)) {
+                if constexpr (Type == ExprType::Add) { return Expr(l + r); }
+                if constexpr (Type == ExprType::Sub) { return Expr(l - r); }
+                if constexpr (Type == ExprType::Mul) { return Expr(l * r); }
+                if constexpr (Type == ExprType::Div) { return Expr(l / r); }
+            }
+            return Expr(Type, asExpr(l), asExpr(r));
+        }
+
+        static bool isValue(int64_t) {
+            return true;
+        }
+
+        static bool isValue(const Expr &expr) {
+            return expr.isValue();
+        }
+
+        static Expr asExpr(const int64_t &value) {
+            return Expr(value);
+        }
+
+
+        static const Expr &asExpr(const Expr &expr) {
+            return expr;
+        }
+
+
         std::shared_ptr<ExprImpl> impl_;
     };
 }
