@@ -58,17 +58,24 @@ namespace my_inference {
             return data_type_ == DataType::Unknown;
         }
 
-        std::vector<TensorDim> shape() {
-            return shape_;
-        }
-
-
         [[nodiscard]] const std::vector<TensorDim> &shape() const {
             return shape_;
         }
 
         void setShape(const std::vector<TensorDim> &shape) {
             shape_ = shape;
+        }
+
+        [[nodiscard]] bool hasShape() const {
+            return !shape_.empty();
+        }
+
+        TensorDim &dim(const int i) {
+            return shape_[i];
+        }
+
+        [[nodiscard]] size_t numDim() const {
+            return shape_.size();
         }
 
         [[nodiscard]] bool isConstant() const {

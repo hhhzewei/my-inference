@@ -67,6 +67,10 @@ namespace my_inference {
             return inputs_;
         }
 
+        [[nodiscard]] TensorNode *input(const int i) const {
+            return inputs_[i];
+        }
+
         // void removeInput(const TensorNode *tensor) {
         //     for (auto &input: inputs_) {
         //         if (input == tensor) {
@@ -91,13 +95,23 @@ namespace my_inference {
         //     }
         // }
         template<typename T>
-        std::pair<bool, T> attribute(const std::string &attributeName) {
+        std::optional<T> attribute(const std::string &attributeName) {
             const auto it = attributes_.find(attributeName);
             if (it == attributes_.end()) {
                 std::cout << "Missing attribute" << std::endl;
-                return {false, T()};
+                return std::nullopt;
             }
-            return {true, it->second.get<T>()};
+            return std::make_optional(it->second.get<T>());
+        }
+
+        template<typename T>
+        T attribute(const std::string &attributeName, const T &default_value) {
+            const auto it = attributes_.find(attributeName);
+            if (it == attributes_.end()) {
+                std::cout << "Missing attribute" << std::endl;
+                return std::move(default_value);
+            }
+            return it->second.get<T>();
         }
 
         [[nodiscard]] std::map<std::string, AttributeValue> attributeMap() const {

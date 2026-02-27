@@ -20,7 +20,7 @@ namespace my_inference {
 
     inline DataType getDataType(const int &onnx_type) {
         // 使用静态 map，确保只初始化一次
-        static const std::unordered_map<int32_t, DataType> type_map = {
+        static const std::unordered_map<int, DataType> type_map = {
             {onnx::TensorProto_DataType_UNDEFINED, DataType::Unknown},
             {onnx::TensorProto_DataType_FLOAT, DataType::Float32},
             {onnx::TensorProto_DataType_UINT8, DataType::Uint8},

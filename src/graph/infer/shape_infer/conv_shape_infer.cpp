@@ -1,0 +1,45 @@
+//
+// Created by hzw on 2026/2/26.
+//
+
+#include "graph/infer/shape_infer/conv_shape_infer.h"
+
+#include "graph/node/attribute_key.h"
+
+void my_inference::ConvShapeInfer::operator()(OpNode *op) {
+    auto &x_shape = op->input(0)->shape();
+    auto &kernel_shape = op->input(1)->shape();
+    const int image_num_dim = x_shape.size() - 2;
+    std::vector<TensorDim> expected_shape;
+    expected_shape.reserve(x_shape.size());
+    // batch
+    expected_shape.emplace_back(x_shape[0]);
+    // out_channel;
+    expected_shape.emplace_back(kernel_shape[0]);
+    std::vector<int64_t> kernel_sizes;
+    if (const auto opt = op->attribute<std::vector<int64_t> >(attribute_key::KernelShape);
+        opt.has_value()) {
+        kernel_sizes = std::move(*opt);
+    } else {
+        kernel_sizes.reserve(image_num_dim);
+        for (int i = 2; i < kernel_shape.size(); ++i) {
+            kernel_sizes.emplace_back(kernel_shape[i].value());
+        }
+    }
+    const auto pads = op->attribute<std::vector<int64_t> >(
+        attribute_key::Pads, std::vector<int64_t>{image_num_dim * 2, 0}); //默认为0
+    const auto strides = op->attribute<std::vector<int64_t> >(
+        attribute_key::Strides, std::vector<int64_t>{image_num_dim, 1}); //默认为1
+    const auto dilations = op->attribute<std::vector<int64_t> >(
+        attribute_key::Dilations, std::vector<int64_t>{image_num_dim, 1}); //默认为1
+    for (int i = 0; i < image_num_dim; ++i) {
+        expected_shape.emplace_back(
+            outputDim(
+                x_shape[i + 2],
+                kernel_sizes[i],
+                pads[i], pads[i + image_num_dim],
+                strides[i],
+                dilations[i]));
+    }
+    op->output(0)->setShape(expected_shape);
+}

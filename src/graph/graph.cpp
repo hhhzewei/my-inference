@@ -4,6 +4,7 @@
 
 #include "graph/graph.h"
 #include "graph/infer/data_type_infer.h"
+#include "graph/infer/shape_infer/shape_infer_util.h"
 #include "util/onnx_util.h"
 
 using namespace my_inference;
@@ -125,7 +126,8 @@ void Graph::createOp(const std::string &name, OpType type,
 
 void Graph::inferDataTypeAndShape() const {
     auto op_func = [](OpNode *op) {
-        inferDataType(op);
+        infer_data_type(op);
+        infer_shape(op);
     };
     forwardTopoTraverse(op_func, default_tensor_func);
 }
