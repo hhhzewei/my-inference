@@ -5,6 +5,7 @@
 #ifndef MY_INFERENCE_UTIL_H
 #define MY_INFERENCE_UTIL_H
 #include <vector>
+#include "graph/node/tensor_dim.h"
 
 namespace my_inference {
     template<typename T>
@@ -18,7 +19,8 @@ namespace my_inference {
             }
         }
     }
-}
 
+    std::vector<int64_t> toValue(const std::vector<TensorDim> &vec);
+}
 
 #endif //MY_INFERENCE_UTIL_H

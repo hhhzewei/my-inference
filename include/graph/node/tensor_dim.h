@@ -20,7 +20,7 @@ namespace my_inference {
         }
 
         [[nodiscard]] bool isDynamic() const {
-            return expr_.isParam();
+            return !expr_.isValue();
         }
 
         [[nodiscard]] std::string param() const {
@@ -31,11 +31,19 @@ namespace my_inference {
             return expr_.value();
         }
 
+        [[nodiscard]] bool isValue() const {
+            return expr_.isValue();
+        }
+
         [[nodiscard]] bool isClear() const {
-            return isDynamic() || value() != 1;
+            return !(expr_.isValue() && expr_.value() == 1);
         }
 
         TensorDim &operator=(const TensorDim &dim) = default;
+
+        friend bool operator==(const TensorDim &td1, const TensorDim &td2) {
+            return td1.expr_ == td2.expr_;
+        }
 
         friend bool operator!=(const TensorDim &dim1, const TensorDim &dim2) {
             return dim1.expr_ != dim2.expr_;

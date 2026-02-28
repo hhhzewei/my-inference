@@ -71,13 +71,6 @@ namespace my_inference {
             return inputs_[i];
         }
 
-        // void removeInput(const TensorNode *tensor) {
-        //     for (auto &input: inputs_) {
-        //         if (input == tensor) {
-        //             input = nullptr;
-        //         }
-        //     }
-        // }
 
         [[nodiscard]] const std::vector<TensorNode *> &outputs() const {
             return outputs_;
@@ -87,13 +80,22 @@ namespace my_inference {
             return outputs_[i];
         }
 
-        // void removeOutput(const TensorNode *tensor) {
-        //     for (auto &output: outputs_) {
-        //         if (output == tensor) {
-        //             output = nullptr;
-        //         }
-        //     }
-        // }
+        const std::vector<TensorDim> &inputStrides(int i) {
+            return inputs_strides_[i];
+        }
+
+        void setInputsStrides(const std::vector<std::vector<TensorDim> > &inputs_strides) {
+            inputs_strides_ = inputs_strides;
+        }
+
+        const std::vector<TensorDim> &outputStrides(int i) {
+            return outputs_strides_[i];
+        }
+
+        void setOutputsStrides(const std::vector<std::vector<TensorDim> > &outputs_strides) {
+            outputs_strides_ = outputs_strides;
+        }
+
         template<typename T>
         std::optional<T> attribute(const std::string &attributeName) {
             const auto it = attributes_.find(attributeName);
@@ -119,41 +121,13 @@ namespace my_inference {
         }
 
     private:
-        // void broadcast() {
-        //     if (isElementWise(type_)) {
-        //         inputs_strides_.reserve(inputs_.size());
-        //         const std::vector<int64_t> &standard_shape = outputs_[0]->shape();
-        //         for (TensorNode *input: inputs_) {
-        //             std::vector<int64_t> shape = input->shape();
-        //             // 左端补1
-        //             if (shape.size() < standard_shape.size()) {
-        //                 shape.insert(shape.begin(), standard_shape.size() - shape.size(), 1);
-        //                 input->setShape(shape);
-        //             }
-        //             std::vector<int64_t> strides(shape.size());
-        //             int64_t stride = 1;
-        //             // 生成stride
-        //             for (int j = static_cast<int>(shape.size()) - 1; j >= 0; --j) {
-        //                 if (shape[j] == standard_shape[j]) {
-        //                     strides[j] = stride;
-        //                 } else if (shape[j] == 1) {
-        //                     strides[j] = 0;
-        //                 } else {
-        //                     std::cout << "Tensor Shape Error. Name:  " << input->name() << std::endl;
-        //                 }
-        //                 stride *= shape[j];
-        //             }
-        //             inputs_strides_.push_back(std::move(strides));
-        //         }
-        //     }
-        // }
-
         std::string name_;
         Id id_;
         OpType type_ = OpType::Unknown;
         std::vector<TensorNode *> inputs_;
-        std::vector<std::vector<int64_t> > inputs_strides_;
+        std::vector<std::vector<TensorDim> > inputs_strides_;
         std::vector<TensorNode *> outputs_;
+        std::vector<std::vector<TensorDim> > outputs_strides_;
         std::map<std::string, AttributeValue> attributes_;
         Device device_ = {DeviceType::CPU, 0};
     };

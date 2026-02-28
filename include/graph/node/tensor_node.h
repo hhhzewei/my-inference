@@ -74,8 +74,8 @@ namespace my_inference {
             return shape_[i];
         }
 
-        [[nodiscard]] size_t numDim() const {
-            return shape_.size();
+        [[nodiscard]] int numDim() const {
+            return static_cast<int>(shape_.size());
         }
 
         [[nodiscard]] bool isConstant() const {
@@ -106,9 +106,13 @@ namespace my_inference {
             return data_;
         }
 
-        void create_data(const std::string &data_string) {
+        void initData(const std::string &data_string) {
             data_ = static_cast<char *>(malloc(data_string.size()));
             std::memcpy(data_, data_string.data(), data_string.size());
+        }
+
+        void setData(void *data) {
+            data_ = static_cast<char *>(data);
         }
 
         void setProducer(OpNode *op) {

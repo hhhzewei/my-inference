@@ -3,14 +3,12 @@
 //
 #include "graph/graph.h"
 #include "graph/infer/data_type_infer.h"
+#include "optimize/constant_folding.h"
 #include "optimize/dead_code_elimination.h"
 
 int main(int argc, char *argv[]) {
     const auto graph = my_inference::Graph::make("../../../onnx/MobileNet-v2.onnx");
-    my_inference::DeadCodeElimination dead_code_elimination;
-    dead_code_elimination(*graph);
-
-    my_inference::OpNode op("", 1, my_inference::OpType::Cast, {}, {}, {});
-    my_inference::inferDataType(&op);
+    my_inference::DeadCodeElimination()(*graph);
+    my_inference::ConstantFolding()(*graph);
     return 0;
 }

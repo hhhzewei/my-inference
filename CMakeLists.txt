@@ -23,7 +23,10 @@ add_library(my_inference STATIC src/graph/graph.cpp
         src/graph/infer/shape_infer/broadcast_shape_infer.cpp
         src/graph/infer/shape_infer/conv_shape_infer.cpp
         src/graph/infer/shape_infer/gemm_shape_infer.cpp
+        src/graph/infer/shape_infer/stride.cpp
         src/optimize/dead_code_elimination.cpp
+        src/optimize/constant_folding.cpp
+        src/util/util.cpp
         src/util/onnx_util.cpp
 )
 

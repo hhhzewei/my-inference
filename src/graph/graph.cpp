@@ -48,7 +48,7 @@ void Graph::loadTensor(const google::protobuf::RepeatedPtrField<onnx::TensorProt
         }
         DataType data_type = getDataType(tensor.data_type());
         TensorNode *p = createTensor(name, shape, data_type, true, global_tensor_map);
-        p->create_data(tensor.raw_data());
+        p->initData(tensor.raw_data());
         weights_.emplace(p->id(), p);
     }
 }
@@ -78,7 +78,7 @@ void Graph::loadOp(const google::protobuf::RepeatedPtrField<onnx::NodeProto> &no
             weights_.emplace(ptr->id(), ptr);
             const auto &tensorProto = node.attribute(0).t();
             if (tensorProto.has_raw_data()) {
-                ptr->create_data(tensorProto.raw_data());
+                ptr->initData(tensorProto.raw_data());
             } else {
                 // todo
             }

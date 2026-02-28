@@ -3,10 +3,12 @@
 //
 #include "graph/infer/shape_infer/broadcast_shape_infer.h"
 
+#include "graph/infer/shape_infer/stride.h"
+
 using namespace my_inference;
 
 void BroadcastShapeInfer::operator()(OpNode *op) {
-    size_t numDim = 0;
+    int numDim = 0;
     // 统计标准维数
     for (const TensorNode *input: op->inputs()) {
         numDim = std::max(numDim, input->numDim());
@@ -17,8 +19,8 @@ void BroadcastShapeInfer::operator()(OpNode *op) {
         TensorDim expected_dim(1);
         for (TensorNode *input: op->inputs()) {
             TensorDim dim(1);
-            if (input->numDim() >= i + 1) {
-                dim = input->dim(input->numDim() - 1 - i);
+            if (const int idx = input->numDim() - 1 - i; idx >= 0) {
+                dim = input->dim(idx);
             }
             // 校验
             if (expected_dim.isClear()) {
@@ -37,4 +39,13 @@ void BroadcastShapeInfer::operator()(OpNode *op) {
     for (TensorNode *output: op->outputs()) {
         output->setShape(expected_shape);
     }
+    // 生成strides
+    std::vector<std::vector<TensorDim> > inputs_strides;
+    inputs_strides.reserve(op->numInput());
+    for (const TensorNode *input: op->inputs()) {
+        inputs_strides.emplace_back(broadcast_stride(input->shape(), expected_shape));
+    }
+    op->setInputsStrides(inputs_strides);
+    const std::vector<TensorDim> output_strides = default_stride(expected_shape);
+    op->setOutputsStrides(std::vector(op->numOutput(), output_strides));
 }
