@@ -25,6 +25,10 @@ namespace my_inference {
                      const std::shared_ptr<ExprImpl> &r) : type(type), content_(std::pair{l, r}) {
             }
 
+            friend bool operator==(const ExprImpl &e1, const ExprImpl &e2) {
+                return e1.content_ == e2.content_;
+            }
+
             friend bool operator!=(const ExprImpl &e1, const ExprImpl &e2) {
                 return e1.content_ != e2.content_;
             }
@@ -64,6 +68,10 @@ namespace my_inference {
 
         [[nodiscard]] std::string param() const {
             return std::get<std::string>(impl_->content_);
+        }
+
+        friend bool operator==(const Expr &e1, const Expr &e2) {
+            return *e1.impl_ == *e2.impl_;
         }
 
         friend bool operator!=(const Expr &e1, const Expr &e2) {
@@ -123,10 +131,10 @@ namespace my_inference {
         template<ExprType Type, typename T, typename U>
         static Expr make(const T &l, const U &r) {
             if (isValue(l) && isValue(r)) {
-                if constexpr (Type == ExprType::Add) { return Expr(l + r); }
-                if constexpr (Type == ExprType::Sub) { return Expr(l - r); }
-                if constexpr (Type == ExprType::Mul) { return Expr(l * r); }
-                if constexpr (Type == ExprType::Div) { return Expr(l / r); }
+                if constexpr (Type == ExprType::Add) { return Expr(asValue(l) + asValue(r)); }
+                if constexpr (Type == ExprType::Sub) { return Expr(asValue(l) - asValue(r)); }
+                if constexpr (Type == ExprType::Mul) { return Expr(asValue(l) * asValue(r)); }
+                if constexpr (Type == ExprType::Div) { return Expr(asValue(l) / asValue(r)); }
             }
             return Expr(Type, asExpr(l), asExpr(r));
         }
@@ -146,6 +154,15 @@ namespace my_inference {
 
         static const Expr &asExpr(const Expr &expr) {
             return expr;
+        }
+
+        static int64_t asValue(const int64_t &value) {
+            return value;
+        }
+
+
+        static int64_t asValue(const Expr &expr) {
+            return expr.value();
         }
 
 
