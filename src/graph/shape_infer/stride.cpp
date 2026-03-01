@@ -1,7 +1,7 @@
 //
 // Created by hzw on 2026/2/28.
 //
-#include "graph/infer/shape_infer/stride.h"
+#include "graph/shape_infer/stride.h"
 
 #include <iostream>
 

@@ -18,12 +18,14 @@ find_package(protobuf CONFIG REQUIRED)
 find_package(onnx CONFIG REQUIRED)
 
 add_library(my_inference STATIC src/graph/graph.cpp
-        src/graph/infer/data_type_infer.cpp
-        src/graph/infer/shape_infer/identity_shape_infer.cpp
-        src/graph/infer/shape_infer/broadcast_shape_infer.cpp
-        src/graph/infer/shape_infer/conv_shape_infer.cpp
-        src/graph/infer/shape_infer/gemm_shape_infer.cpp
-        src/graph/infer/shape_infer/stride.cpp
+        src/graph/attribute_propagate/conv_attr_propagator.cpp
+        src/graph/attribute_propagate/gemm_attr_propagator.cpp
+        src/graph/date_type_infer/data_type_infer.cpp
+        src/graph/shape_infer/identity_shape_infer.cpp
+        src/graph/shape_infer/broadcast_shape_infer.cpp
+        src/graph/shape_infer/conv_shape_infer.cpp
+        src/graph/shape_infer/gemm_shape_infer.cpp
+        src/graph/shape_infer/stride.cpp
         src/optimize/dead_code_elimination.cpp
         src/optimize/constant_folding.cpp
         src/util/util.cpp

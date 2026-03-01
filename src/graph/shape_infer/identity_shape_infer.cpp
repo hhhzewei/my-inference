@@ -1,9 +1,8 @@
 //
 // Created by hzw on 2026/2/24.
 //
-#include "graph/infer/shape_infer/identity_shape_infer.h"
-
-#include "graph/infer/shape_infer/stride.h"
+#include "graph/shape_infer/identity_shape_infer.h"
+#include "graph/shape_infer/stride.h"
 
 using namespace my_inference;
 

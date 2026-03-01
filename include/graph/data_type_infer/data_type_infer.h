@@ -9,6 +9,4 @@ namespace my_inference {
     void inferDataType(OpNode *op);
 
     void inferDataType(const OpNode *op, DataType target);
-
-    void inferDataType(const OpNode *op, const std::vector<DataType> &target);
 }

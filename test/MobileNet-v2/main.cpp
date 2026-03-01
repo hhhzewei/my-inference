@@ -2,7 +2,7 @@
 // Created by hzw on 2026/2/18.
 //
 #include "graph/graph.h"
-#include "graph/infer/data_type_infer.h"
+#include "graph/data_type_infer/data_type_infer.h"
 #include "optimize/constant_folding.h"
 #include "optimize/dead_code_elimination.h"
 

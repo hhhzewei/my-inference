@@ -6,7 +6,7 @@
 #include "optimize/dead_code_elimination.h"
 
 int main(int argc, char *argv[]) {
-    const auto graph=my_inference::Graph::make("../../../onnx/full_debug.onnx");
+    const auto graph=my_inference::Graph::make("../../../onnx/test_optimize.onnx");
     my_inference::DeadCodeElimination dead_code_elimination;
     dead_code_elimination(*graph);
     my_inference::ConstantFolding constant_folding;

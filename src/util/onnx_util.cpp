@@ -6,7 +6,8 @@
 #include <fstream>
 #include <iostream>
 #include "util/onnx_util.h"
-#include "graph/node/attribute_key.h"
+#include "graph/node/attribute/attribute_key.h"
+#include "graph/node/attribute/attribute_value.h"
 
 using namespace my_inference;
 

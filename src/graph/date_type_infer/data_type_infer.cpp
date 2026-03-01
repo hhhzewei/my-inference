@@ -2,8 +2,8 @@
 // Created by hzw on 2026/2/24.
 //
 
-#include "graph/infer/data_type_infer.h"
-#include "graph/node/attribute_key.h"
+#include "graph/data_type_infer/data_type_infer.h"
+#include "graph/node/attribute/attribute_key.h"
 
 using namespace my_inference;
 

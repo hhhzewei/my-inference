@@ -6,8 +6,8 @@
 
 #include <utility>
 
-#include "graph/node/attribute_key.h"
-#include "graph/node/attribute_value.h"
+#include "graph/node/attribute/attribute_key.h"
+#include "graph/node/attribute/attribute_value.h"
 #include "graph/node/op_type.h"
 #include "graph/node/tensor_node.h"
 #include "kernel/device.h"
@@ -23,9 +23,9 @@ namespace my_inference {
         OpNode(std::string name, const Id &id, const OpType &type,
                const std::vector<TensorNode *> &inputs, const std::vector<TensorNode *> &outputs,
                const std::map<AttributeKey, AttributeValue> &attribute_map) : name_(std::move(name)), id_(id),
-                                                                             type_(type),
-                                                                             inputs_(inputs), outputs_(outputs),
-                                                                             attributes_(attribute_map) {
+                                                                              type_(type),
+                                                                              inputs_(inputs), outputs_(outputs),
+                                                                              attributes_(attribute_map) {
         }
 
         [[nodiscard]] Id id() const {
@@ -97,9 +97,14 @@ namespace my_inference {
             outputs_strides_ = outputs_strides;
         }
 
+        bool hasAttribute(const AttributeKey &attributeKey) {
+            const auto it = attributes_.find(attributeKey);
+            return it == attributes_.end();
+        }
+
         template<typename T>
-        std::optional<T> attribute(const AttributeKey &attributeName) {
-            const auto it = attributes_.find(attributeName);
+        std::optional<T> attribute(const AttributeKey &attributeKey) {
+            const auto it = attributes_.find(attributeKey);
             if (it == attributes_.end()) {
                 std::cout << "Missing attribute" << std::endl;
                 return std::nullopt;
@@ -108,13 +113,8 @@ namespace my_inference {
         }
 
         template<typename T>
-        T attribute(const AttributeKey &attributeKey, const T &default_value) {
-            const auto it = attributes_.find(attributeKey);
-            if (it == attributes_.end()) {
-                std::cout << "Missing attribute" << std::endl;
-                return std::move(default_value);
-            }
-            return it->second.get<T>();
+        void setAttribute(const AttributeKey &key, T value) {
+            attributes_.emplace(key, value);
         }
 
         [[nodiscard]] std::map<AttributeKey, AttributeValue> attributeMap() const {

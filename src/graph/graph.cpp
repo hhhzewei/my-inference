@@ -3,8 +3,10 @@
 //
 
 #include "graph/graph.h"
-#include "graph/infer/data_type_infer.h"
-#include "graph/infer/shape_infer/shape_infer_util.h"
+
+#include "graph/attribute_propagate/attr_propagate_util.h"
+#include "graph/data_type_infer/data_type_infer.h"
+#include "graph/shape_infer/shape_infer_util.h"
 #include "util/onnx_util.h"
 
 using namespace my_inference;
@@ -87,16 +89,18 @@ void Graph::loadOp(const google::protobuf::RepeatedPtrField<onnx::NodeProto> &no
             std::map<AttributeKey, AttributeValue> attribute_map = loadAttribute(node.attribute());
             // 收集input/output一次性构造
             // 预先分配空间
-            std::vector<TensorNode *> op_inputs(node.input_size());
-            std::vector<TensorNode *> op_outputs(node.output_size());
+            std::vector<TensorNode *> op_inputs;
+            op_inputs.reserve(node.input_size());
+            std::vector<TensorNode *> op_outputs;
+            op_outputs.reserve(node.output_size());
             // index迭代赋值，不能push_back()
             for (int i = 0; i < node.input_size(); ++i) {
                 TensorNode *input_ptr = global_tensor_map.find(node.input(i))->second;
-                op_inputs[i] = input_ptr;
+                op_inputs.emplace_back(input_ptr);
             }
             for (int i = 0; i < node.output_size(); ++i) {
                 TensorNode *output_ptr = global_tensor_map.find(node.output(i))->second;
-                op_outputs[i] = output_ptr;
+                op_outputs.emplace_back(output_ptr);
             }
             createOp(name, type, op_inputs, op_outputs, attribute_map, global_op_map);
         }
@@ -115,12 +119,16 @@ void Graph::createOp(const std::string &name, OpType type,
                                         attribute_map);
     OpNode *raw_p = ptr.get();
     global_op_map.emplace(name, raw_p);
+    // 输入张量关联
     for (TensorNode *input: op_inputs) {
         input->addConsumer(raw_p);
     }
+    // 输出张量关联
     for (TensorNode *output: op_outputs) {
         output->setProducer(raw_p);
     }
+    // 补全默认属性
+    propagateAttribute(raw_p);
     op_repository_.emplace(ptr->id(), std::move(ptr));
 }
 

@@ -4,7 +4,7 @@
 
 #ifndef MY_INFERENCE_BROADCAST_SHAPE_INFER_H
 #define MY_INFERENCE_BROADCAST_SHAPE_INFER_H
-#include "graph/infer/shape_infer.h"
+#include "graph/shape_infer/shape_infer.h"
 
 namespace my_inference {
     class BroadcastShapeInfer : public ShapeInfer {

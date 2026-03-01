@@ -4,7 +4,7 @@
 
 #ifndef MY_INFERENCE_IDENTITY_SHAPE_INFER_H
 #define MY_INFERENCE_IDENTITY_SHAPE_INFER_H
-#include "graph/infer/shape_infer.h"
+#include "graph/shape_infer/shape_infer.h"
 
 namespace my_inference {
     class IdentityShapeInfer : public ShapeInfer {

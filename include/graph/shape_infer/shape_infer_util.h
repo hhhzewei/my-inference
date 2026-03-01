@@ -4,10 +4,10 @@
 
 #ifndef MY_INFERENCE_SHAPE_INFER_UTIL_H
 #define MY_INFERENCE_SHAPE_INFER_UTIL_H
-#include "graph/infer/shape_infer.h"
-#include "graph/infer/shape_infer/identity_shape_infer.h"
-#include "graph/infer/shape_infer/broadcast_shape_infer.h"
-#include "graph/infer/shape_infer/conv_shape_infer.h"
+#include "shape_infer.h"
+#include "graph/shape_infer/identity_shape_infer.h"
+#include "graph/shape_infer/broadcast_shape_infer.h"
+#include "graph/shape_infer/conv_shape_infer.h"
 
 namespace my_inference {
     inline void inferShape(OpNode *op) {

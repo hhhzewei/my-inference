@@ -8,8 +8,8 @@
 #include <map>
 #include <onnx/onnx-ml.pb.h>
 
-#include "graph/node/attribute_key.h"
-#include "graph/node/attribute_value.h"
+#include "graph/node/attribute/attribute_key.h"
+#include "graph/node/attribute/attribute_value.h"
 
 namespace my_inference {
     void loadOnnxModel(const std::string &path, onnx::ModelProto &model);
