@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include "util/onnx_util.h"
+#include "graph/node/attribute_key.h"
 
 using namespace my_inference;
 
@@ -31,28 +32,28 @@ void my_inference::loadOnnxModel(const std::string &path, onnx::ModelProto &mode
     std::cout << "生成者: " << model.producer_name() << std::endl;
 }
 
-std::map<std::string, AttributeValue> my_inference::loadAttribute(
+std::map<AttributeKey, AttributeValue> my_inference::loadAttribute(
     const google::protobuf::RepeatedPtrField<onnx::AttributeProto> &attributeList) {
-    std::map<std::string, AttributeValue> map;
+    std::map<AttributeKey, AttributeValue> map;
     for (auto &attribute: attributeList) {
-        const std::string &name = attribute.name();
+        const AttributeKey &key = getAttributeKey(attribute.name());
         switch (attribute.type()) {
             case onnx::AttributeProto_AttributeType_FLOAT: {
-                map.emplace(name, attribute.f());
+                map.emplace(key, attribute.f());
                 break;
             }
             case onnx::AttributeProto_AttributeType_INT: {
-                map.emplace(name, attribute.i());
+                map.emplace(key, attribute.i());
                 break;
             }
             case onnx::AttributeProto_AttributeType_FLOATS: {
                 std::vector<float> floats{attribute.floats().begin(), attribute.floats().end()};
-                map.emplace(name, floats);
+                map.emplace(key, floats);
                 break;
             }
             case onnx::AttributeProto_AttributeType_INTS: {
                 std::vector<int64_t> ints{attribute.ints().begin(), attribute.ints().end()};
-                map.emplace(name, ints);
+                map.emplace(key, ints);
                 break;
             }
             default: {

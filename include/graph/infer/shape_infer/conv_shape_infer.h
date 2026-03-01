@@ -19,8 +19,8 @@ namespace my_inference {
     private:
         ConvShapeInfer() = default;
 
-        static TensorDim outputDim(const TensorDim &x, const int &kernel_size, const int &pad0, const int &pad1,
-                                   const int &stride, const int &dilation) {
+        static TensorDim outputDim(const TensorDim &x, const int64_t &kernel_size, const int64_t &pad0, const int64_t &pad1,
+                                   const int64_t &stride, const int64_t &dilation) {
             return (pad0 + pad1 - (1 + dilation * (kernel_size - 1)) + x) / stride + 1;
         }
     };

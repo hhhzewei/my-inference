@@ -6,6 +6,7 @@
 
 #include <utility>
 
+#include "graph/node/attribute_key.h"
 #include "graph/node/attribute_value.h"
 #include "graph/node/op_type.h"
 #include "graph/node/tensor_node.h"
@@ -21,7 +22,7 @@ namespace my_inference {
 
         OpNode(std::string name, const Id &id, const OpType &type,
                const std::vector<TensorNode *> &inputs, const std::vector<TensorNode *> &outputs,
-               const std::map<std::string, AttributeValue> &attribute_map) : name_(std::move(name)), id_(id),
+               const std::map<AttributeKey, AttributeValue> &attribute_map) : name_(std::move(name)), id_(id),
                                                                              type_(type),
                                                                              inputs_(inputs), outputs_(outputs),
                                                                              attributes_(attribute_map) {
@@ -97,7 +98,7 @@ namespace my_inference {
         }
 
         template<typename T>
-        std::optional<T> attribute(const std::string &attributeName) {
+        std::optional<T> attribute(const AttributeKey &attributeName) {
             const auto it = attributes_.find(attributeName);
             if (it == attributes_.end()) {
                 std::cout << "Missing attribute" << std::endl;
@@ -107,8 +108,8 @@ namespace my_inference {
         }
 
         template<typename T>
-        T attribute(const std::string &attributeName, const T &default_value) {
-            const auto it = attributes_.find(attributeName);
+        T attribute(const AttributeKey &attributeKey, const T &default_value) {
+            const auto it = attributes_.find(attributeKey);
             if (it == attributes_.end()) {
                 std::cout << "Missing attribute" << std::endl;
                 return std::move(default_value);
@@ -116,7 +117,7 @@ namespace my_inference {
             return it->second.get<T>();
         }
 
-        [[nodiscard]] std::map<std::string, AttributeValue> attributeMap() const {
+        [[nodiscard]] std::map<AttributeKey, AttributeValue> attributeMap() const {
             return attributes_;
         }
 
@@ -128,7 +129,7 @@ namespace my_inference {
         std::vector<std::vector<TensorDim> > inputs_strides_;
         std::vector<TensorNode *> outputs_;
         std::vector<std::vector<TensorDim> > outputs_strides_;
-        std::map<std::string, AttributeValue> attributes_;
+        std::map<AttributeKey, AttributeValue> attributes_;
         Device device_ = {DeviceType::CPU, 0};
     };
 }

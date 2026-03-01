@@ -7,10 +7,10 @@
 
 using namespace my_inference;
 
-void my_inference::infer_data_type(OpNode *op) {
+void my_inference::inferDataType(OpNode *op) {
     const OpType op_type = op->type();
     if (op_type == OpType::Cast) {
-        if (const auto opt = op->attribute<int64_t>(attribute_key::To); opt.has_value()) {
+        if (const auto opt = op->attribute<int64_t>(AttributeKey::To); opt.has_value()) {
             const DataType target = getDataType(static_cast<int>(*opt));
             inferDataType(op, target);
         }

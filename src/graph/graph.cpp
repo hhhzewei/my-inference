@@ -84,7 +84,7 @@ void Graph::loadOp(const google::protobuf::RepeatedPtrField<onnx::NodeProto> &no
             }
         } else {
             const std::string &name = node.name();
-            std::map<std::string, AttributeValue> attribute_map = loadAttribute(node.attribute());
+            std::map<AttributeKey, AttributeValue> attribute_map = loadAttribute(node.attribute());
             // 收集input/output一次性构造
             // 预先分配空间
             std::vector<TensorNode *> op_inputs(node.input_size());
@@ -105,7 +105,7 @@ void Graph::loadOp(const google::protobuf::RepeatedPtrField<onnx::NodeProto> &no
 
 void Graph::createOp(const std::string &name, OpType type,
                      const std::vector<TensorNode *> &op_inputs, const std::vector<TensorNode *> &op_outputs,
-                     const std::map<std::string, AttributeValue> &attribute_map,
+                     const std::map<AttributeKey, AttributeValue> &attribute_map,
                      std::map<std::string, OpNode *> &global_op_map) {
     const auto it = global_op_map.find(name);
     if (it != global_op_map.end()) {
@@ -126,8 +126,8 @@ void Graph::createOp(const std::string &name, OpType type,
 
 void Graph::inferDataTypeAndShape() const {
     auto op_func = [](OpNode *op) {
-        infer_data_type(op);
-        infer_shape(op);
+        inferDataType(op);
+        inferShape(op);
     };
     forwardTopoTraverse(op_func, default_tensor_func);
 }

@@ -184,7 +184,7 @@ namespace my_inference {
 
         void createOp(const std::string &name, OpType type,
                       const std::vector<TensorNode *> &op_inputs, const std::vector<TensorNode *> &op_outputs,
-                      const std::map<std::string, AttributeValue> &attribute_map,
+                      const std::map<AttributeKey, AttributeValue> &attribute_map,
                       std::map<std::string, OpNode *> &global_op_map);
 
         void loadOp(const google::protobuf::RepeatedPtrField<onnx::NodeProto> &node_list,

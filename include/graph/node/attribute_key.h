@@ -3,16 +3,42 @@
 //
 #pragma once
 #include <string>
+#include <map>
 
-namespace my_inference::attribute_key {
-    // cast
-    inline std::string To = "to";
-    //conv
-    inline std::string Dilations = "dilations";
-    inline std::string Group = "group";
-    inline std::string KernelShape = "kernel_shape";
-    inline std::string Pads = "pads";
-    inline std::string Strides = "strides";
-    inline std::string TransA = "transA";
-    inline std::string TransB = "transB";
+namespace my_inference {
+    enum class AttributeKey {
+        Unknown,
+        // cast
+        To,
+        // conv
+        Dilations,
+        Group,
+        KernelShape,
+        Pads,
+        Strides,
+        // gemm
+        TransA,
+        TransB
+    };
+
+    inline AttributeKey getAttributeKey(const std::string &name) {
+        std::map<std::string, AttributeKey> map = {
+            // cast
+            {"to", AttributeKey::To},
+            // conv
+            {"dilations", AttributeKey::Dilations},
+            {"group", AttributeKey::Group},
+            {"kernel_shape", AttributeKey::KernelShape},
+            {"pads", AttributeKey::Pads},
+            {"strides", AttributeKey::Strides},
+            // gemm
+            {"transA", AttributeKey::TransA},
+            {"transB", AttributeKey::TransB}
+        };
+        const auto it = map.find(name);
+        if (it == map.end()) {
+            return AttributeKey::Unknown;
+        }
+        return it->second;
+    }
 }

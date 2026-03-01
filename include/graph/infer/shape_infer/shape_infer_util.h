@@ -10,7 +10,7 @@
 #include "graph/infer/shape_infer/conv_shape_infer.h"
 
 namespace my_inference {
-    inline void infer_shape(OpNode *op) {
+    inline void inferShape(OpNode *op) {
         static std::map<OpType, ShapeInfer *> map{
             // activate
             {OpType::Relu, IdentityShapeInfer::instance()},
