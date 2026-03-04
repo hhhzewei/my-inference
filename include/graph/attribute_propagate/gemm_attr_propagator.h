@@ -17,8 +17,8 @@ namespace my_inference {
         void operator()(OpNode *) override;
 
     private:
-        static constexpr bool DEFAULT_TRANS_A = false;
-        static constexpr bool DEFAULT_TRANS_B = false;
+        static constexpr int64_t DEFAULT_TRANS_A = false;
+        static constexpr int64_t DEFAULT_TRANS_B = false;
 
         GemmAttrPropagator() = default;
     };

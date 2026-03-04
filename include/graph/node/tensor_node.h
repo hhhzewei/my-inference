@@ -86,6 +86,10 @@ namespace my_inference {
             is_constant_ = true;
         }
 
+        [[nodiscard]] bool hasProducer() const {
+            return producer_ != nullptr;
+        }
+
         [[nodiscard]] size_t numProducer() const {
             return producer_ == nullptr ? 0 : 1;
         }
@@ -98,7 +102,7 @@ namespace my_inference {
             return producer_;
         }
 
-        [[nodiscard]] std::vector<OpNode *> consumers() const {
+        [[nodiscard]] const std::vector<OpNode *> &consumers() const {
             return consumers_;
         }
 
@@ -122,10 +126,8 @@ namespace my_inference {
             producer_ = op;
         }
 
-        void removeProducer(const OpNode *op) {
-            if (producer_ == op) {
-                producer_ = nullptr;
-            }
+        void removeProducer() {
+            producer_ = nullptr;
         }
 
         void addConsumer(OpNode *op) {

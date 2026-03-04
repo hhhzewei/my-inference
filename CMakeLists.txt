@@ -21,13 +21,16 @@ add_library(my_inference STATIC src/graph/graph.cpp
         src/graph/attribute_propagate/conv_attr_propagator.cpp
         src/graph/attribute_propagate/gemm_attr_propagator.cpp
         src/graph/date_type_infer/data_type_infer.cpp
+        # 形状推导
         src/graph/shape_infer/identity_shape_infer.cpp
         src/graph/shape_infer/broadcast_shape_infer.cpp
         src/graph/shape_infer/conv_shape_infer.cpp
         src/graph/shape_infer/gemm_shape_infer.cpp
         src/graph/shape_infer/stride.cpp
+        # 图优化
         src/optimize/dead_code_elimination.cpp
         src/optimize/constant_folding.cpp
+        src/optimize/common_subexpression_elimination.cpp
         src/util/util.cpp
         src/util/onnx_util.cpp
 )

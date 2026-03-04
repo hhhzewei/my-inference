@@ -5,7 +5,6 @@
 
 #include "graph/node/op_node.h"
 
-
 namespace my_inference {
     class ShapeInfer {
     public:

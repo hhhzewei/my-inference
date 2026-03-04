@@ -2,6 +2,7 @@
 // Created by hzw on 2026/2/25.
 //
 #include "graph/shape_infer/broadcast_shape_infer.h"
+#include "graph/node/tensor_node.h"
 #include "graph/shape_infer/stride.h"
 
 using namespace my_inference;

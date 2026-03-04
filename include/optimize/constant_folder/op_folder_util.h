@@ -25,11 +25,11 @@ namespace my_inference {
     }
 
     inline FolderKey getFolderKey(const OpNode *op) {
-        return getFolderKey(op->type(), op->dataType(), op->deviceType());
+        return getFolderKey(op->type(), op->input(0)->dataType(), op->deviceType());
     }
 
     inline bool opFold(OpNode *op) {
-        std::map<FolderKey, OpFolder *> map = {
+        static std::map<FolderKey, OpFolder *> map = {
             {
                 getFolderKey(OpType::Add, DataType::Float32, DeviceType::CPU),
                 ElementWiseFolder<float, AddFunctor<float> >::instance(),

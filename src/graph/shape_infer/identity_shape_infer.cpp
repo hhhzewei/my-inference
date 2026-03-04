@@ -3,6 +3,7 @@
 //
 #include "graph/shape_infer/identity_shape_infer.h"
 #include "graph/shape_infer/stride.h"
+#include "graph/node/tensor_node.h"
 
 using namespace my_inference;
 

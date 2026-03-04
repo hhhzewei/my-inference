@@ -4,6 +4,7 @@
 
 #include "graph/shape_infer/conv_shape_infer.h"
 #include "graph/node/attribute/attribute_key.h"
+#include "graph/node/tensor_node.h"
 
 void my_inference::ConvShapeInfer::operator()(OpNode *op) {
     auto &x_shape = op->input(0)->shape();

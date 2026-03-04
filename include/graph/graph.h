@@ -11,6 +11,7 @@
 #include "graph/node/op_node.h"
 #include "graph/node/tensor_node.h"
 #include "graph/node/tensor_type.h"
+#include "graph/graph_util.h"
 #include "util/id_generator.h"
 
 namespace my_inference {
@@ -30,16 +31,30 @@ namespace my_inference {
 
         Graph(Graph &&) = delete;
 
-        bool isOutput(TensorId id) {
-            return outputs_.find(id) != outputs_.end();
+        static void unlinkInputFromOp(OpNode *op) {
+            for (int i = 0; i < op->numInput(); ++i) {
+                op->input(i)->removeConsumer(op);
+            }
         }
 
-        static void unlinkOp(OpNode *op) {
-            for (TensorNode *input: op->inputs()) {
-                input->removeConsumer(op);
+        static void unlinkOutputFromOp(const OpNode *op) {
+            for (int i = 0; i < op->numOutput(); ++i) {
+                op->output(i)->removeProducer();
             }
-            for (TensorNode *output: op->outputs()) {
-                output->removeProducer(op);
+        }
+
+
+        static void unlinkOp(OpNode *op) {
+            unlinkInputFromOp(op);
+            unlinkOutputFromOp(op);
+        }
+
+        static void unlinkTensor(const TensorNode *tensor) {
+            if (tensor->hasProducer()) {
+                tensor->producer()->replaceOutput(tensor, EmptyTensor.get());
+            }
+            for (OpNode *consumer: tensor->consumers()) {
+                consumer->replaceOutput(tensor, EmptyTensor.get());
             }
         }
 
@@ -47,14 +62,12 @@ namespace my_inference {
             op_repository_.erase(id);
         }
 
+        void addWeight(TensorNode *tensor) {
+            weights_.emplace(tensor->id(), tensor);
+        }
+
         template<TensorType TYPE_MASK>
         void unregisterTensor(const TensorId &id) {
-            if constexpr (is<TensorType::INPUT>(TYPE_MASK)) {
-                inputs_.erase(id);
-            }
-            if constexpr (is<TensorType::OUTPUT>(TYPE_MASK)) {
-                std::cout << "Cant unregister output tensor" << std::endl;
-            }
             if constexpr (is<TensorType::WEIGHT>(TYPE_MASK)) {
                 weights_.erase(id);
             }
@@ -64,15 +77,27 @@ namespace my_inference {
             tensor_repository_.erase(id);
         }
 
+        [[nodiscard]] OpNode *sinkOp() const {
+            return sinkOp_.get();
+        }
+
+        bool isSink(const OpNode *op) const {
+            return op == sinkOp_.get();
+        }
+
         constexpr static auto default_tensor_func = [](TensorNode *) {
         };
 
-        template<typename OpFunc, typename TensorFunc>
-        void forwardTopoTraverse(const OpFunc &op_func, const TensorFunc &tensor_func) const {
+        template<typename OpFunc, typename TensorFunc = decltype(default_tensor_func)>
+        void forwardTopoTraverse(const OpFunc &op_func, const TensorFunc &tensor_func = default_tensor_func) const {
             auto op_in_degree = opInDegrees();
             auto tensor_in_degree = tensorInDegrees();
             std::queue<OpNode *> op_queue;
-            std::queue<TensorNode *> tensor_queue = zeroInDegreeTensor();
+            op_queue.push(sourceOp_.get());
+            std::queue<TensorNode *> tensor_queue;
+            for (auto &[id, w]: weights_) {
+                tensor_queue.push(w);
+            }
             while (!op_queue.empty() || !tensor_queue.empty()) {
                 while (!tensor_queue.empty()) {
                     TensorNode *tensor = tensor_queue.front();
@@ -103,7 +128,8 @@ namespace my_inference {
             auto op_out_degree = opOutDegrees();
             auto tensor_out_degree = tensorOutDegrees();
             std::queue<OpNode *> op_queue;
-            std::queue<TensorNode *> tensor_queue = zeroOutDegreeTensor();
+            op_queue.push(sinkOp_.get());
+            std::queue<TensorNode *> tensor_queue;
             while (!op_queue.empty() || !tensor_queue.empty()) {
                 while (!tensor_queue.empty()) {
                     TensorNode *tensor = tensor_queue.front();
@@ -128,7 +154,7 @@ namespace my_inference {
             }
         }
 
-        void shrinkTensor(const std::set<TensorId> &aliveIds);
+        void shrinkTensor(const std::set<TensorId> &alive_ids);
 
         void shrinkOp(const std::set<OpId> &aliveIds);
 
@@ -142,6 +168,7 @@ namespace my_inference {
         template<TensorType TENSOR_TYPE>
         void loadTensor(const google::protobuf::RepeatedPtrField<onnx::ValueInfoProto> &value_info_list,
                         std::map<std::string, TensorNode *> &global_tensor_map) {
+            std::vector<TensorNode *> total_tensor; // 记录输入或输出集合
             for (const onnx::ValueInfoProto &valueInfo: value_info_list) {
                 // 名称
                 const std::string &name = valueInfo.name();
@@ -166,10 +193,25 @@ namespace my_inference {
                     data_type = getDataType(tensor_type.elem_type());
                 }
                 TensorNode *p = createTensor(name, shape, data_type, false, global_tensor_map);
-                if constexpr (TENSOR_TYPE == TensorType::INPUT) {
-                    inputs_.emplace(p->id(), p);
-                } else if constexpr (TENSOR_TYPE == TensorType::OUTPUT) {
-                    outputs_.emplace(p->id(), p);
+                if constexpr (TENSOR_TYPE == TensorType::INPUT || TENSOR_TYPE == TensorType::OUTPUT) {
+                    total_tensor.push_back(p);
+                }
+            }
+            if constexpr (TENSOR_TYPE == TensorType::INPUT) {
+                sourceOp_ = std::make_unique<OpNode>("__GRAPH_SOURCE__", op_id_generator_.nextId(), OpType::Source,
+                                                     std::vector<TensorNode *>(),
+                                                     total_tensor,
+                                                     std::map<AttributeKey, AttributeValue>{});
+                for (TensorNode *input: total_tensor) {
+                    input->setProducer(sourceOp_.get());
+                }
+            } else if constexpr (TENSOR_TYPE == TensorType::OUTPUT) {
+                sinkOp_ = std::make_unique<OpNode>("__GRAPH_SINK__", op_id_generator_.nextId(), OpType::Sink,
+                                                   total_tensor,
+                                                   std::vector<TensorNode *>(),
+                                                   std::map<AttributeKey, AttributeValue>{});
+                for (TensorNode *output: total_tensor) {
+                    output->addConsumer(sinkOp_.get());
                 }
             }
         }
@@ -183,7 +225,7 @@ namespace my_inference {
                                  const bool &is_constant, std::map<std::string, TensorNode *> &global_tensor_map);
 
         void createOp(const std::string &name, OpType type,
-                      const std::vector<TensorNode *> &op_inputs, const std::vector<TensorNode *> &op_outputs,
+                      std::vector<TensorNode *> &op_inputs, const std::vector<TensorNode *> &op_outputs,
                       const std::map<AttributeKey, AttributeValue> &attribute_map,
                       std::map<std::string, OpNode *> &global_op_map);
 
@@ -191,10 +233,6 @@ namespace my_inference {
                     const std::map<std::string, TensorNode *> &global_tensor_map);
 
         void inferDataTypeAndShape() const;
-
-        [[nodiscard]] std::queue<TensorNode *> zeroInDegreeTensor() const;
-
-        [[nodiscard]] std::queue<TensorNode *> zeroOutDegreeTensor() const;
 
         [[nodiscard]] std::map<TensorNode::Id, size_t> tensorInDegrees() const;
 
@@ -205,10 +243,10 @@ namespace my_inference {
         [[nodiscard]] std::map<OpNode::Id, size_t> opOutDegrees() const;
 
         IdGenerator<OpId, 0> op_id_generator_{};
-        IdGenerator<TensorId, 0> tensor_id_generator_{};
-        std::map<TensorId, TensorNode *> inputs_;
+        IdGenerator<TensorId, 1> tensor_id_generator_{};
+        std::unique_ptr<OpNode> sourceOp_;
+        std::unique_ptr<OpNode> sinkOp_;
         std::map<TensorId, TensorNode *> weights_;
-        std::map<TensorId, TensorNode *> outputs_;
         std::map<OpId, std::unique_ptr<OpNode> > op_repository_;
         std::map<TensorId, std::unique_ptr<TensorNode> > tensor_repository_;
     };

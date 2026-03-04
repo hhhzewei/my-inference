@@ -10,6 +10,8 @@
 namespace my_inference {
     enum class OpType {
         Unknown = 0,
+        Source,
+        Sink,
         // --- 1. 基础数学运算 (Basic Arithmetic) ---
         Add, Sub, Mul, Div,
         Gemm, MatMul,
@@ -28,11 +30,14 @@ namespace my_inference {
         // --- 5. 规约与统计 (Reduction & Statistics) ---
         ReduceMean, ReduceSum, ReduceMax, ReduceMin,
         ArgMax, ArgMin,
-        // --- 6. 逻辑与条件 (Logic & Control Flow) ---
-        Less, Greater, Equal, And, Or, Not,
+        // --- 6. 比较 ---
+        Less, Greater, Equal, NotEqual,
+        // --- 7. 逻辑与条件 (Logic & Control Flow) ---
+        And, Or, Not, Xor,
+        Max, Min,
         Where, NonZero, Range,
         TopK, NonMaxSuppression, ROIAlign,
-        // --- 7. 辅助算子 (Miscellaneous) ---
+        // --- 8. 辅助算子 (Miscellaneous) ---
         Constant, Identity
     };
 
@@ -74,7 +79,9 @@ namespace my_inference {
 
             // 逻辑与特殊处理
             {"Less", OpType::Less}, {"Greater", OpType::Greater}, {"Equal", OpType::Equal},
-            {"And", OpType::And}, {"Or", OpType::Or}, {"Not", OpType::Not},
+            {"NotEqual", OpType::NotEqual},
+            {"And", OpType::And}, {"Or", OpType::Or}, {"Not", OpType::Not}, {"Xor", OpType::Xor},
+            {"Max", OpType::Max}, {"Min", OpType::Min},
             {"Where", OpType::Where}, {"NonZero", OpType::NonZero}, {"Range", OpType::Range},
             {"TopK", OpType::TopK}, {"NonMaxSuppression", OpType::NonMaxSuppression},
             {"ROIAlign", OpType::ROIAlign},
@@ -86,12 +93,17 @@ namespace my_inference {
         return it == opMap.end() ? OpType::Unknown : it->second;
     }
 
-    inline bool isElementWise(const OpType &opType) {
+    inline bool isInputCommutative(const OpType &opType) {
         switch (opType) {
             case OpType::Add:
-            case OpType::Sub:
             case OpType::Mul:
-            case OpType::Div: return true;
+            case OpType::And:
+            case OpType::Or:
+            case OpType::Xor:
+            case OpType::Equal:
+            case OpType::NotEqual:
+            case OpType::Max:
+            case OpType::Min: return true;
             default: return false;
         }
     }
@@ -101,9 +113,11 @@ namespace my_inference {
             case OpType::Less:
             case OpType::Greater:
             case OpType::Equal:
+            case OpType::NotEqual:
             case OpType::And:
             case OpType::Or:
             case OpType::Not:
+            case OpType::Xor:
                 return true;
             default: return false;
         }

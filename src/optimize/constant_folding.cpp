@@ -9,10 +9,12 @@ using namespace my_inference;
 
 void ConstantFolding::operator()(Graph &graph) {
     auto op_func = [&](OpNode *op) {
+        if (op->type() == OpType::Source || op->type() == OpType::Sink) {
+            return;
+        }
         // check whether every input is constant
         bool isAllInputConstant = true;
-        const std::vector<TensorNode *> inputs = op->inputs();
-        for (const TensorNode *input: inputs) {
+        for (const TensorNode *input: op->inputs()) {
             isAllInputConstant &= input->isConstant();
         }
         if (!isAllInputConstant) {
@@ -25,17 +27,18 @@ void ConstantFolding::operator()(Graph &graph) {
         // set output constant
         for (TensorNode *output: op->outputs()) {
             output->setConstant();
+            graph.addWeight(output);
         }
-        // remove op node
-        Graph::unlinkOp(op);
-        graph.eraseOp(op->id());
+        graph.unlinkOutputFromOp(op);
+        graph.unlinkInputFromOp(op);
         // remove useless input tensor
-        for (const TensorNode *input: inputs) {
-            if (input->numConsumer() == 0 && !graph.isOutput(input->id())) {
+        for (const TensorNode *input: op->inputs()) {
+            if (input->numConsumer() == 0) {
                 graph.unregisterTensor<TensorType::WEIGHT>(input->id());
                 graph.eraseTensor(input->id());
             }
         }
+        graph.eraseOp(op->id());
     };
-    graph.forwardTopoTraverse(op_func,Graph::default_tensor_func);
+    graph.forwardTopoTraverse(op_func);
 }

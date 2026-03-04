@@ -9,7 +9,7 @@
 
 namespace my_inference {
     template<typename T>
-    void swapAndPop(std::vector<T> &vec, T target) {
+    void swapAndPop(std::vector<T> &vec,const T& target) {
         for (int i = 0; i < vec.size();) {
             if (vec[i] == target) {
                 vec[i] = vec.back();

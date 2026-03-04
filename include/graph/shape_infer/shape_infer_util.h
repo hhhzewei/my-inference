@@ -45,12 +45,15 @@ namespace my_inference {
             {OpType::Less, BroadcastShapeInfer::instance()},
             {OpType::Greater, BroadcastShapeInfer::instance()},
             {OpType::Equal, BroadcastShapeInfer::instance()},
+            {OpType::NotEqual, BroadcastShapeInfer::instance()},
             {OpType::And, BroadcastShapeInfer::instance()},
             {OpType::Or, BroadcastShapeInfer::instance()},
+            {OpType::Xor, BroadcastShapeInfer::instance()},
+            {OpType::Max, BroadcastShapeInfer::instance()},
+            {OpType::Min, BroadcastShapeInfer::instance()},
             {OpType::Where, BroadcastShapeInfer::instance()},
             // conv
             {OpType::Conv, ConvShapeInfer::instance()},
-
         };
         const auto it = map.find(op->type());
         if (it == map.end()) {

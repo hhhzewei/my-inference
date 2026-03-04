@@ -26,6 +26,6 @@ namespace my_inference {
         }
 
     private:
-        Id counter = 0;;
+        Id counter = START;
     };
 }
