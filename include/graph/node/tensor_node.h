@@ -14,6 +14,14 @@ namespace my_inference {
     //前向声明避免循环include
     class OpNode;
 
+    struct ConsumerInfo {
+        ConsumerInfo(OpNode *consumer, const int input_idx) : consumer(consumer), input_idx(input_idx) {
+        }
+
+        OpNode *consumer;
+        int input_idx;
+    };
+
     class TensorNode {
     public:
         using Id = uint32_t;
@@ -24,10 +32,9 @@ namespace my_inference {
 
         TensorNode(TensorNode &&) = delete;
 
-        TensorNode(const std::string &name, const Id &id, const std::vector<TensorDim> &shape,
-                   const DataType &data_type,
-                   const bool is_constant) : name_(name), id_(id), shape_(shape), data_type_(data_type),
-                                             is_constant_(is_constant) {
+        TensorNode(const Id &id, std::string name,
+                   OpNode *producer, const int output_idx) : id_(id), name_(std::move(name)), producer_(producer),
+                                                             output_idx_(output_idx) {
         }
 
         ~TensorNode() {
@@ -78,32 +85,14 @@ namespace my_inference {
             return static_cast<int>(shape_.size());
         }
 
-        [[nodiscard]] bool isConstant() const {
-            return is_constant_;
-        }
-
-        void setConstant() {
-            is_constant_ = true;
-        }
-
-        [[nodiscard]] bool hasProducer() const {
-            return producer_ != nullptr;
-        }
-
-        [[nodiscard]] size_t numProducer() const {
-            return producer_ == nullptr ? 0 : 1;
-        }
-
-        [[nodiscard]] size_t numConsumer() const {
-            return consumers_.size();
-        }
+        [[nodiscard]] bool isConstant() const;
 
         [[nodiscard]] OpNode *producer() const {
             return producer_;
         }
 
-        [[nodiscard]] const std::vector<OpNode *> &consumers() const {
-            return consumers_;
+        [[nodiscard]] const std::vector<ConsumerInfo> &consumers() const {
+            return consumer_infos_;
         }
 
         [[nodiscard]] void *data() const {
@@ -119,35 +108,47 @@ namespace my_inference {
             data_ = static_cast<char *>(data);
         }
 
-        void setProducer(OpNode *op) {
-            if (producer_) {
-                std::cout << "Repeat producer: tensor {name:" << name_ << "}" << std::endl;
-            }
-            producer_ = op;
-        }
-
         void removeProducer() {
             producer_ = nullptr;
         }
 
-        void addConsumer(OpNode *op) {
-            consumers_.push_back(op);
+        [[nodiscard]] int numConsumer() const {
+            return static_cast<int>(consumer_infos_.size());
         }
 
-        void removeConsumer(OpNode *op) {
-            swapAndPop<OpNode *>(consumers_, op);
+        void addConsumer(OpNode *consumer, int input_idx) {
+            consumer_infos_.emplace_back(consumer, input_idx);
+        }
+
+        void removeConsumer(const OpNode *op) {
+            swapAndPop<ConsumerInfo>(consumer_infos_, [=](const ConsumerInfo consumer_info) {
+                return consumer_info.consumer == op;
+            });
+        }
+
+        void init(const DataType data_type, const std::vector<TensorDim> &shape) {
+            data_type_ = data_type;
+            shape_ = shape;
+        }
+
+        [[nodiscard]] unsigned outputIdx() const {
+            return output_idx_;
+        }
+
+        void replaceProducer(OpNode *producer, const int output_idx) {
+            producer_ = producer;
+            output_idx_ = output_idx;
         }
 
     private:
-        std::string name_;
         Id id_;
-        std::vector<TensorDim> shape_;
-        DataType data_type_;
-        bool is_constant_;
-        char *data_ = nullptr;
-        std::vector<int64_t> strides_;
+        std::string name_;
         OpNode *producer_ = nullptr;
+        unsigned output_idx_;
+        std::vector<TensorDim> shape_{};
+        DataType data_type_ = DataType::Unknown;
+        char *data_ = nullptr;
         // 尽管consumer的顺序没有意义，但是元素数少时vector性能比set更好
-        std::vector<OpNode *> consumers_{};
+        std::vector<ConsumerInfo> consumer_infos_{};
     };
 }

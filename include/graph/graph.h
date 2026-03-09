@@ -31,130 +31,68 @@ namespace my_inference {
 
         Graph(Graph &&) = delete;
 
-        static void unlinkInputFromOp(OpNode *op) {
-            for (int i = 0; i < op->numInput(); ++i) {
-                op->input(i)->removeConsumer(op);
-            }
-        }
-
-        static void unlinkOutputFromOp(const OpNode *op) {
-            for (int i = 0; i < op->numOutput(); ++i) {
-                op->output(i)->removeProducer();
-            }
-        }
-
-
-        static void unlinkOp(OpNode *op) {
-            unlinkInputFromOp(op);
-            unlinkOutputFromOp(op);
-        }
-
-        static void unlinkTensor(const TensorNode *tensor) {
-            if (tensor->hasProducer()) {
-                tensor->producer()->replaceOutput(tensor, EmptyTensor.get());
-            }
-            for (OpNode *consumer: tensor->consumers()) {
-                consumer->replaceOutput(tensor, EmptyTensor.get());
-            }
-        }
-
-        void eraseOp(const OpId &id) {
-            op_repository_.erase(id);
-        }
-
-        void addWeight(TensorNode *tensor) {
-            weights_.emplace(tensor->id(), tensor);
-        }
-
-        template<TensorType TYPE_MASK>
-        void unregisterTensor(const TensorId &id) {
-            if constexpr (is<TensorType::WEIGHT>(TYPE_MASK)) {
-                weights_.erase(id);
-            }
-        }
-
-        void eraseTensor(const TensorId &id) {
-            tensor_repository_.erase(id);
+        [[nodiscard]] OpNode *sourceOp() const {
+            return sourceOp_.get();
         }
 
         [[nodiscard]] OpNode *sinkOp() const {
             return sinkOp_.get();
         }
 
-        bool isSink(const OpNode *op) const {
-            return op == sinkOp_.get();
+        void eraseOp(const OpId id) {
+            op_repository_.erase(id);
         }
 
-        constexpr static auto default_tensor_func = [](TensorNode *) {
-        };
+        void eraseTensor(const TensorId id) {
+            tensor_repository_.erase(id);
+        }
 
-        template<typename OpFunc, typename TensorFunc = decltype(default_tensor_func)>
-        void forwardTopoTraverse(const OpFunc &op_func, const TensorFunc &tensor_func = default_tensor_func) const {
+        void makeConstant(TensorNode *tensor);
+
+        void eraseConstant(OpNode *constant) {
+            swapAndPop(constant_nodes, constant);
+            eraseTensor(constant->output(0)->id());
+            eraseOp(constant->id());
+        }
+
+        template<typename OpFunc>
+        void forwardTopoTraverse(const OpFunc &op_func) const {
             auto op_in_degree = opInDegrees();
-            auto tensor_in_degree = tensorInDegrees();
             std::queue<OpNode *> op_queue;
             op_queue.push(sourceOp_.get());
-            std::queue<TensorNode *> tensor_queue;
-            for (auto &[id, w]: weights_) {
-                tensor_queue.push(w);
+            for (auto &constant_node: constant_nodes) {
+                op_queue.push(constant_node);
             }
-            while (!op_queue.empty() || !tensor_queue.empty()) {
-                while (!tensor_queue.empty()) {
-                    TensorNode *tensor = tensor_queue.front();
-                    tensor_queue.pop();
-                    for (OpNode *op: tensor->consumers()) {
-                        if (--op_in_degree[op->id()] == 0) {
-                            op_queue.push(op);
+            while (!op_queue.empty()) {
+                OpNode *op = op_queue.front();
+                op_queue.pop();
+                for (TensorNode *output: op->outputs()) {
+                    for (auto &[consumer,input_idx]: output->consumers())
+                        if (--op_in_degree[consumer->id()] == 0) {
+                            op_queue.push(consumer);
                         }
-                    }
-                    tensor_func(tensor);
                 }
-                while (!op_queue.empty()) {
-                    OpNode *op = op_queue.front();
-                    op_queue.pop();
-                    for (TensorNode *tensor: op->outputs()) {
-                        if (--tensor_in_degree[tensor->id()] == 0) {
-                            tensor_queue.push(tensor);
-                        }
-                    }
-                    op_func(op);
-                }
+                op_func(op);
             }
         }
 
 
-        template<typename OpFunc, typename TensorFunc>
-        void backwardTopoTraverse(const OpFunc &op_func, const TensorFunc &tensor_func) {
+        template<typename OpFunc>
+        void backwardTopoTraverse(const OpFunc &op_func) {
             auto op_out_degree = opOutDegrees();
-            auto tensor_out_degree = tensorOutDegrees();
             std::queue<OpNode *> op_queue;
             op_queue.push(sinkOp_.get());
-            std::queue<TensorNode *> tensor_queue;
-            while (!op_queue.empty() || !tensor_queue.empty()) {
-                while (!tensor_queue.empty()) {
-                    TensorNode *tensor = tensor_queue.front();
-                    tensor_queue.pop();
-                    if (OpNode *op = tensor->producer(); op != nullptr) {
-                        if (--op_out_degree[op->id()] == 0) {
-                            op_queue.push(op);
-                        }
+            while (!op_queue.empty()) {
+                OpNode *op = op_queue.front();
+                op_queue.pop();
+                for (const TensorNode *tensor: op->inputs()) {
+                    if (auto producer = tensor->producer(); --op_out_degree[producer->id()] == 0) {
+                        op_queue.push(producer);
                     }
-                    tensor_func(tensor);
                 }
-                while (!op_queue.empty()) {
-                    OpNode *op = op_queue.front();
-                    op_queue.pop();
-                    for (TensorNode *tensor: op->inputs()) {
-                        if (--tensor_out_degree[tensor->id()] == 0) {
-                            tensor_queue.push(tensor);
-                        }
-                    }
-                    op_func(op);
-                }
+                op_func(op);
             }
         }
-
-        void shrinkTensor(const std::set<TensorId> &alive_ids);
 
         void shrinkOp(const std::set<OpId> &aliveIds);
 
@@ -165,14 +103,29 @@ namespace my_inference {
 
         void loadOnnx(const std::string &onnx_path);
 
+        void loadOp(const google::protobuf::RepeatedPtrField<onnx::NodeProto> &node_list,
+                    std::map<std::string, OpNode *> &global_op_map,
+                    std::map<std::string, TensorNode *> &global_tensor_map);
+
+        OpNode *createOp(const std::string &name, OpType type,
+                         const std::map<AttributeKey, AttributeValue> &attribute_map,
+                         std::map<std::string, OpNode *> &global_op_map);
+
         template<TensorType TENSOR_TYPE>
         void loadTensor(const google::protobuf::RepeatedPtrField<onnx::ValueInfoProto> &value_info_list,
                         std::map<std::string, TensorNode *> &global_tensor_map) {
-            std::vector<TensorNode *> total_tensor; // 记录输入或输出集合
-            for (const onnx::ValueInfoProto &valueInfo: value_info_list) {
-                // 名称
+            if constexpr (TENSOR_TYPE != TensorType::INPUT && TENSOR_TYPE != TensorType::OUTPUT && TENSOR_TYPE !=
+                          TensorType::INTERNAL) {
+                return;
+            }
+            std::vector<TensorNode *> tensors;
+            if constexpr (TENSOR_TYPE == TensorType::INPUT || TENSOR_TYPE == TensorType::OUTPUT) {
+                tensors.reserve(value_info_list.size());
+            }
+            for (int i = 0; i < value_info_list.size(); ++i) {
+                auto &valueInfo = value_info_list[i];
                 const std::string &name = valueInfo.name();
-                // 形状
+                // shape
                 auto &tensor_type = valueInfo.type().tensor_type();
                 std::vector<TensorDim> shape;
                 if (tensor_type.has_shape()) {
@@ -187,56 +140,51 @@ namespace my_inference {
                         }
                     }
                 }
-                // 数据类型
+                // data type
                 auto data_type = DataType::Unknown;
                 if (tensor_type.has_elem_type()) {
                     data_type = getDataType(tensor_type.elem_type());
                 }
-                TensorNode *p = createTensor(name, shape, data_type, false, global_tensor_map);
+                // tensor
+                TensorNode *tensor = nullptr;
+                if constexpr (TENSOR_TYPE == TensorType::INPUT) {
+                    tensor = createTensor(name, sourceOp(), i, global_tensor_map);
+                } else {
+                    auto it = global_tensor_map.find(name);
+                    if (it == global_tensor_map.end()) {
+                        continue;
+                    }
+                    tensor = it->second;
+                }
+                tensor->init(data_type, shape);
+                // merge input or output
                 if constexpr (TENSOR_TYPE == TensorType::INPUT || TENSOR_TYPE == TensorType::OUTPUT) {
-                    total_tensor.push_back(p);
+                    tensors.emplace_back(tensor);
+                }
+                if constexpr (TENSOR_TYPE == TensorType::OUTPUT) {
+                    tensor->addConsumer(sinkOp(), i);
                 }
             }
             if constexpr (TENSOR_TYPE == TensorType::INPUT) {
-                sourceOp_ = std::make_unique<OpNode>("__GRAPH_SOURCE__", op_id_generator_.nextId(), OpType::Source,
-                                                     std::vector<TensorNode *>(),
-                                                     total_tensor,
-                                                     std::map<AttributeKey, AttributeValue>{});
-                for (TensorNode *input: total_tensor) {
-                    input->setProducer(sourceOp_.get());
-                }
-            } else if constexpr (TENSOR_TYPE == TensorType::OUTPUT) {
-                sinkOp_ = std::make_unique<OpNode>("__GRAPH_SINK__", op_id_generator_.nextId(), OpType::Sink,
-                                                   total_tensor,
-                                                   std::vector<TensorNode *>(),
-                                                   std::map<AttributeKey, AttributeValue>{});
-                for (TensorNode *output: total_tensor) {
-                    output->addConsumer(sinkOp_.get());
-                }
+                sourceOp_->init({}, std::move(tensors));
+            }
+            if constexpr (TENSOR_TYPE == TensorType::OUTPUT) {
+                sinkOp_->init(std::move(tensors), {});
             }
         }
 
         void loadTensor(const google::protobuf::RepeatedPtrField<onnx::TensorProto> &tensor_list,
-                        std::map<std::string, TensorNode *> &
-                        global_tensor_map);
+                        std::map<std::string, TensorNode *> &global_tensor_map,
+                        std::map<std::string, OpNode *> &global_op_map);
 
-        TensorNode *createTensor(const std::string &name, const std::vector<TensorDim> &shape,
-                                 const DataType &data_type,
-                                 const bool &is_constant, std::map<std::string, TensorNode *> &global_tensor_map);
+        TensorNode *createTensor(const std::string &name,
+                                 OpNode *producer, int output_idx,
+                                 std::map<std::string, TensorNode *> &global_tensor_map);
 
-        void createOp(const std::string &name, OpType type,
-                      std::vector<TensorNode *> &op_inputs, const std::vector<TensorNode *> &op_outputs,
-                      const std::map<AttributeKey, AttributeValue> &attribute_map,
-                      std::map<std::string, OpNode *> &global_op_map);
-
-        void loadOp(const google::protobuf::RepeatedPtrField<onnx::NodeProto> &node_list,
-                    const std::map<std::string, TensorNode *> &global_tensor_map);
+        TensorNode *createTensor(OpNode *producer, int output_idx, const onnx::TensorProto &tensor_proto,
+                                 std::map<std::string, TensorNode *> &global_tensor_map);
 
         void inferDataTypeAndShape() const;
-
-        [[nodiscard]] std::map<TensorNode::Id, size_t> tensorInDegrees() const;
-
-        [[nodiscard]] std::map<TensorNode::Id, size_t> tensorOutDegrees() const;
 
         [[nodiscard]] std::map<OpNode::Id, size_t> opInDegrees() const;
 
@@ -244,9 +192,10 @@ namespace my_inference {
 
         IdGenerator<OpId, 0> op_id_generator_{};
         IdGenerator<TensorId, 1> tensor_id_generator_{};
+        IdGenerator<OpId, 0> constant_id_generator_{};
         std::unique_ptr<OpNode> sourceOp_;
         std::unique_ptr<OpNode> sinkOp_;
-        std::map<TensorId, TensorNode *> weights_;
+        std::vector<OpNode *> constant_nodes;
         std::map<OpId, std::unique_ptr<OpNode> > op_repository_;
         std::map<TensorId, std::unique_ptr<TensorNode> > tensor_repository_;
     };

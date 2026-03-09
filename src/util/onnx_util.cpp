@@ -49,12 +49,12 @@ std::map<AttributeKey, AttributeValue> my_inference::loadAttribute(
             }
             case onnx::AttributeProto_AttributeType_FLOATS: {
                 std::vector<float> floats{attribute.floats().begin(), attribute.floats().end()};
-                map.emplace(key, floats);
+                map.emplace(key, std::move(floats));
                 break;
             }
             case onnx::AttributeProto_AttributeType_INTS: {
                 std::vector<int64_t> ints{attribute.ints().begin(), attribute.ints().end()};
-                map.emplace(key, ints);
+                map.emplace(key, std::move(ints));
                 break;
             }
             default: {

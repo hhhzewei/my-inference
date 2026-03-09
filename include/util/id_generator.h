@@ -16,7 +16,7 @@ namespace my_inference {
 
         IdGenerator(IdGenerator &&) = delete;
 
-        Id nextId() {
+        Id next() {
             Id result = counter;
             ++counter;
             if (counter == START) {

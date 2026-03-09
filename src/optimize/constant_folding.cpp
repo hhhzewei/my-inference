@@ -9,12 +9,12 @@ using namespace my_inference;
 
 void ConstantFolding::operator()(Graph &graph) {
     auto op_func = [&](OpNode *op) {
-        if (op->type() == OpType::Source || op->type() == OpType::Sink) {
+        if (op->type() == OpType::Source || op->type() == OpType::Sink||op->type() == OpType::Constant) {
             return;
         }
         // check whether every input is constant
         bool isAllInputConstant = true;
-        for (const TensorNode *input: op->inputs()) {
+        for (const auto input: op->inputs()) {
             isAllInputConstant &= input->isConstant();
         }
         if (!isAllInputConstant) {
@@ -24,18 +24,16 @@ void ConstantFolding::operator()(Graph &graph) {
         if (!opFold(op)) {
             return;
         }
-        // set output constant
+        // create constant node and replace output producer
         for (TensorNode *output: op->outputs()) {
-            output->setConstant();
-            graph.addWeight(output);
+            graph.makeConstant(output);
         }
-        graph.unlinkOutputFromOp(op);
-        graph.unlinkInputFromOp(op);
-        // remove useless input tensor
+        // remove op from consumer of input
+        unlinkInputOfOp(op);
+        // remove useless constant
         for (const TensorNode *input: op->inputs()) {
             if (input->numConsumer() == 0) {
-                graph.unregisterTensor<TensorType::WEIGHT>(input->id());
-                graph.eraseTensor(input->id());
+                graph.eraseConstant(input->producer());
             }
         }
         graph.eraseOp(op->id());

@@ -18,6 +18,8 @@ find_package(protobuf CONFIG REQUIRED)
 find_package(onnx CONFIG REQUIRED)
 
 add_library(my_inference STATIC src/graph/graph.cpp
+        src/graph/node/tensor_node.cpp
+        src/graph/node/op_node.cpp
         src/graph/attribute_propagate/conv_attr_propagator.cpp
         src/graph/attribute_propagate/gemm_attr_propagator.cpp
         src/graph/date_type_infer/data_type_infer.cpp

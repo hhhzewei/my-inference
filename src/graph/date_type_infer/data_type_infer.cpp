@@ -10,7 +10,7 @@ using namespace my_inference;
 
 void my_inference::inferDataType(OpNode *op) {
     const OpType op_type = op->type();
-    if (op_type == OpType::Source || op_type == OpType::Sink) {
+    if (op_type == OpType::Source || op_type == OpType::Sink || op_type == OpType::Constant) {
         return;
     }
     if (op_type == OpType::Cast) {

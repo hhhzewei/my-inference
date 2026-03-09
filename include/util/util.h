@@ -20,6 +20,18 @@ namespace my_inference {
         }
     }
 
+    template<typename T,typename Matcher>
+    void swapAndPop(std::vector<T> &vec,const Matcher& matcher) {
+        for (int i = 0; i < vec.size();) {
+            if (matcher(vec[i])) {
+                vec[i] = vec.back();
+                vec.pop_back();
+            } else {
+                ++i;
+            }
+        }
+    }
+
     std::vector<int64_t> toValue(const std::vector<TensorDim> &vec);
 }
 

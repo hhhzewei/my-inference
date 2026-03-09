@@ -10,7 +10,10 @@
 #include "graph/node/op_node.h"
 
 namespace my_inference {
-    inline auto EmptyTensor = std::make_unique<TensorNode>(
-        "__EMPTY_TENSOR__", 0, std::vector<TensorDim>{}, DataType::Unknown, true);
+    inline void unlinkInputOfOp(const OpNode *op) {
+        for (TensorNode *input: op->inputs()) {
+            input->removeConsumer(op);
+        }
+    }
 }
 #endif //MY_INFERENCE_GRAPH_UTIL_H

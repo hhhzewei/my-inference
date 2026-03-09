@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <optional>
 #include "graph/node/attribute/attribute_key.h"
 #include "graph/node/attribute/attribute_value.h"
@@ -15,18 +16,23 @@ namespace my_inference {
     //前向声明避免循环include
     class TensorNode;
 
-    extern std::unique_ptr<TensorNode> EmptyTensor;
-
     class OpNode {
     public:
         using Id = uint32_t;
 
-        OpNode(std::string name, const Id &id, const OpType &type,
-               const std::vector<TensorNode *> &inputs, const std::vector<TensorNode *> &outputs,
+        OpNode(const Id id, std::string name, const OpType &type,
                const std::map<AttributeKey, AttributeValue> &attribute_map) : name_(std::move(name)), id_(id),
-                                                                              type_(type),
-                                                                              inputs_(inputs), outputs_(outputs),
-                                                                              attributes_(attribute_map) {
+                                                                              type_(type), attributes_(attribute_map) {
+        }
+
+        OpNode(const Id id, std::string name, const OpType &type,
+               std::vector<TensorNode *> outputs) : name_(std::move(name)),
+                                                    id_(id), type_(type), outputs_(std::move(outputs)) {
+        }
+
+        void init(std::vector<TensorNode *> inputs, std::vector<TensorNode *> outputs) {
+            inputs_ = std::move(inputs);
+            outputs_ = std::move(outputs);
         }
 
         [[nodiscard]] Id id() const {
@@ -37,6 +43,10 @@ namespace my_inference {
             return type_;
         }
 
+        [[nodiscard]] bool isConstant() const {
+            return type_==OpType::Constant;
+        }
+
         [[nodiscard]] DeviceType deviceType() const {
             return device_.type;
         }
@@ -45,29 +55,11 @@ namespace my_inference {
             return inputs_.size();
         }
 
-        [[nodiscard]] size_t numValidInput() const {
-            size_t result = 0;
-            for (const TensorNode *input: inputs_) {
-                if (input != EmptyTensor.get()) {
-                    ++result;
-                }
-            }
-            return result;
-        }
-
         [[nodiscard]] size_t numOutput() const {
             return outputs_.size();
         }
 
-        [[nodiscard]] size_t numValidOutput() const {
-            size_t result = 0;
-            for (const TensorNode *input: outputs_) {
-                if (input != EmptyTensor.get()) {
-                    ++result;
-                }
-            }
-            return result;
-        }
+        [[nodiscard]] int numConsumer() const;
 
         [[nodiscard]] const std::vector<TensorNode *> &inputs() const {
             return inputs_;
@@ -77,18 +69,13 @@ namespace my_inference {
             return inputs_[i];
         }
 
-        void setInput(const int i, TensorNode *input) {
-            inputs_[i] = input;
+        void removeInput(const unsigned input_idx) {
+            inputs_[input_idx] = nullptr;
         }
 
-        void replaceInput(const TensorNode *to_remove, TensorNode *replace) {
-            for (int i = 0; i < inputs_.size(); ++i) {
-                if (inputs_[i] == to_remove) {
-                    inputs_[i] = replace;
-                }
-            }
+        void replaceInput(const unsigned input_idx, TensorNode *new_input) {
+            inputs_[input_idx] = new_input;
         }
-
 
         [[nodiscard]] const std::vector<TensorNode *> &outputs() const {
             return outputs_;
@@ -98,14 +85,10 @@ namespace my_inference {
             return outputs_[i];
         }
 
-        void setOutput(const int i, TensorNode *output) {
-            outputs_[i] = output;
-        }
-
         void replaceOutput(const TensorNode *to_remove, TensorNode *replace) {
-            for (int i = 0; i < outputs_.size(); ++i) {
-                if (outputs_[i] == to_remove) {
-                    outputs_[i] = replace;
+            for (auto &output: outputs_) {
+                if (output == to_remove) {
+                    output = replace;
                 }
             }
         }
@@ -146,6 +129,7 @@ namespace my_inference {
             attributes_.emplace(key, value);
         }
 
+
         [[nodiscard]] const std::map<AttributeKey, AttributeValue> &attributeMap() const {
             return attributes_;
         }
@@ -153,7 +137,7 @@ namespace my_inference {
     private:
         std::string name_;
         Id id_;
-        OpType type_ = OpType::Unknown;
+        OpType type_;
         std::vector<TensorNode *> inputs_;
         std::vector<std::vector<TensorDim> > inputs_strides_;
         std::vector<TensorNode *> outputs_;
