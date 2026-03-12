@@ -44,7 +44,7 @@ namespace my_inference {
         }
 
         [[nodiscard]] bool isConstant() const {
-            return type_==OpType::Constant;
+            return type_ == OpType::Constant;
         }
 
         [[nodiscard]] DeviceType deviceType() const {
@@ -85,12 +85,8 @@ namespace my_inference {
             return outputs_[i];
         }
 
-        void replaceOutput(const TensorNode *to_remove, TensorNode *replace) {
-            for (auto &output: outputs_) {
-                if (output == to_remove) {
-                    output = replace;
-                }
-            }
+        void replaceOutput(const int output_idx, TensorNode *new_input) {
+            outputs_[output_idx] = new_input;
         }
 
         const std::vector<TensorDim> &inputStrides(int i) {
@@ -109,13 +105,13 @@ namespace my_inference {
             outputs_strides_ = outputs_strides;
         }
 
-        bool hasAttribute(const AttributeKey &attributeKey) {
+        [[nodiscard]] bool hasAttribute(const AttributeKey &attributeKey) const {
             const auto it = attributes_.find(attributeKey);
             return it == attributes_.end();
         }
 
         template<typename T>
-        std::optional<T> attribute(const AttributeKey &attributeKey) {
+        std::optional<T> attribute(const AttributeKey &attributeKey) const {
             const auto it = attributes_.find(attributeKey);
             if (it == attributes_.end()) {
                 std::cout << "Missing attribute" << std::endl;

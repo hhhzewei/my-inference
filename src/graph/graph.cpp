@@ -102,7 +102,7 @@ OpNode *Graph::createOp(const std::string &name, OpType type,
     OpNode *raw_p = it->second.get();
     global_op_map.emplace(name, raw_p);
     if (type == OpType::Constant) {
-        constant_nodes.emplace_back(raw_p);
+        constant_nodes_.emplace_back(raw_p);
     }
     return raw_p;
 }
@@ -172,33 +172,24 @@ void Graph::makeConstant(TensorNode *tensor) {
     auto id = op_id_generator_.next();
     auto [it,success] = op_repository_.emplace(
         id, std::make_unique<OpNode>(id,
-                                     "__CONSTANT__" + std::to_string(constant_id_generator_.next()) + "__",
+                                     "__CONSTANT__" + std::to_string(id) + "__",
                                      OpType::Constant, std::vector{tensor}));
     const auto &unique_ptr = it->second;
-    constant_nodes.emplace_back(unique_ptr.get());
-    tensor->replaceProducer(unique_ptr.get(), 0);
+    constant_nodes_.emplace_back(unique_ptr.get());
+    replaceProducer(tensor, unique_ptr.get(), 0);
 }
 
 void Graph::shrinkOp(const std::set<OpId> &aliveIds) {
-    std::set<OpNode *> dead_ops;
+    std::vector<OpNode *> dead_op_list;
     for (auto &[id,p]: op_repository_) {
         if (aliveIds.find(id) == aliveIds.end()) {
-            dead_ops.insert(p.get());
+            dead_op_list.emplace_back(p.get());
         }
     }
-    for (OpNode *op: dead_ops) {
-        // unlink
-        for (const auto input: op->inputs()) {
-            input->removeConsumer(op);
-        }
-        for (const auto output: op->outputs()) {
-            for (auto &[consumer,input_idx]: output->consumers()) {
-                consumer->removeInput(input_idx);
-            }
-        }
-        eraseOp(op->id());
-        for (const auto output: op->outputs()) {
-            tensor_repository_.erase(output->id());
-        }
+    for (const OpNode *op: dead_op_list) {
+        unlink(op);
+    }
+    for (const OpNode *op: dead_op_list) {
+        eraseOp(op);
     }
 }

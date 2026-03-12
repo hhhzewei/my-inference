@@ -91,6 +91,10 @@ namespace my_inference {
             return producer_;
         }
 
+        [[nodiscard]] const ConsumerInfo &consumer(const int i) const {
+            return consumer_infos_[i];
+        }
+
         [[nodiscard]] const std::vector<ConsumerInfo> &consumers() const {
             return consumer_infos_;
         }
@@ -120,9 +124,15 @@ namespace my_inference {
             consumer_infos_.emplace_back(consumer, input_idx);
         }
 
-        void removeConsumer(const OpNode *op) {
+        void removeConsumer(const OpNode *consumer) {
             swapAndPop<ConsumerInfo>(consumer_infos_, [=](const ConsumerInfo consumer_info) {
-                return consumer_info.consumer == op;
+                return consumer_info.consumer == consumer;
+            });
+        }
+
+        void removeConsumer(const OpNode *consumer, const int input_idx) {
+            swapAndPop<ConsumerInfo>(consumer_infos_, [=](const ConsumerInfo consumer_info) {
+                return consumer_info.consumer == consumer && consumer_info.input_idx == input_idx;
             });
         }
 

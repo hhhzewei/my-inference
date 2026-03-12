@@ -9,7 +9,7 @@ using namespace my_inference;
 
 void ConstantFolding::operator()(Graph &graph) {
     auto op_func = [&](OpNode *op) {
-        if (op->type() == OpType::Source || op->type() == OpType::Sink||op->type() == OpType::Constant) {
+        if (op->type() == OpType::Source || op->type() == OpType::Sink || op->type() == OpType::Constant) {
             return;
         }
         // check whether every input is constant
@@ -24,19 +24,19 @@ void ConstantFolding::operator()(Graph &graph) {
         if (!opFold(op)) {
             return;
         }
-        // create constant node and replace output producer
+        // create constant node and replace output's producer
         for (TensorNode *output: op->outputs()) {
             graph.makeConstant(output);
         }
         // remove op from consumer of input
-        unlinkInputOfOp(op);
+        graph.unlink(op);
         // remove useless constant
         for (const TensorNode *input: op->inputs()) {
             if (input->numConsumer() == 0) {
                 graph.eraseConstant(input->producer());
             }
         }
-        graph.eraseOp(op->id());
+        graph.eraseOp(op);
     };
     graph.forwardTopoTraverse(op_func);
 }

@@ -39,20 +39,40 @@ namespace my_inference {
             return sinkOp_.get();
         }
 
-        void eraseOp(const OpId id) {
-            op_repository_.erase(id);
+        void replaceProducer(TensorNode *tensor, OpNode *new_producer, const int new_output_idx) const {
+            tensor->producer()->replaceOutput(new_output_idx, emptyTensor());
+            tensor->replaceProducer(new_producer, new_output_idx);
         }
 
-        void eraseTensor(const TensorId id) {
-            tensor_repository_.erase(id);
+        static void replaceInput(OpNode *op, const int input_idx, TensorNode *new_input) {
+            op->input(input_idx)->removeConsumer(op, input_idx);
+            op->replaceInput(input_idx, new_input);
+        }
+
+        void unlink(const OpNode *op) const {
+            for (TensorNode *tensor: op->inputs()) {
+                tensor->removeConsumer(op);
+            }
+            for (const auto output: op->outputs()) {
+                for (auto &[consumer,input_idx]: output->consumers()) {
+                    consumer->replaceInput(input_idx, emptyTensor());
+                }
+            }
+        }
+
+        void eraseOp(const OpNode *op) {
+            for (const auto output: op->outputs()) {
+                tensor_repository_.erase(output->id());
+            }
+            op_repository_.erase(op->id());
         }
 
         void makeConstant(TensorNode *tensor);
 
         void eraseConstant(OpNode *constant) {
-            swapAndPop(constant_nodes, constant);
+            swapAndPop(constant_nodes_, constant);
             eraseTensor(constant->output(0)->id());
-            eraseOp(constant->id());
+            eraseOp(constant);
         }
 
         template<typename OpFunc>
@@ -60,7 +80,7 @@ namespace my_inference {
             auto op_in_degree = opInDegrees();
             std::queue<OpNode *> op_queue;
             op_queue.push(sourceOp_.get());
-            for (auto &constant_node: constant_nodes) {
+            for (auto &constant_node: constant_nodes_) {
                 op_queue.push(constant_node);
             }
             while (!op_queue.empty()) {
@@ -190,12 +210,22 @@ namespace my_inference {
 
         [[nodiscard]] std::map<OpNode::Id, size_t> opOutDegrees() const;
 
+        [[nodiscard]] TensorNode *emptyTensor() const {
+            return empty_tensor_.get();
+        }
+
+        void eraseTensor(const TensorId id) {
+            tensor_repository_.erase(id);
+        }
+
+        constexpr static TensorId EMPTY_TENSOR_ID = 0;
+        std::unique_ptr<TensorNode> empty_tensor_ = std::make_unique<TensorNode>(
+            EMPTY_TENSOR_ID, "__EMPTY_TENSOR__", nullptr, 0);
         IdGenerator<OpId, 0> op_id_generator_{};
-        IdGenerator<TensorId, 1> tensor_id_generator_{};
-        IdGenerator<OpId, 0> constant_id_generator_{};
+        IdGenerator<TensorId, EMPTY_TENSOR_ID + 1> tensor_id_generator_{};
         std::unique_ptr<OpNode> sourceOp_;
         std::unique_ptr<OpNode> sinkOp_;
-        std::vector<OpNode *> constant_nodes;
+        std::vector<OpNode *> constant_nodes_;
         std::map<OpId, std::unique_ptr<OpNode> > op_repository_;
         std::map<TensorId, std::unique_ptr<TensorNode> > tensor_repository_;
     };

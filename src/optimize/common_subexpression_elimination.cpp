@@ -22,16 +22,16 @@ void my_inference::CommonSubexpressionElimination::operator()(Graph &graph) {
             }
             for (int i = 0; i < op->numOutput(); ++i) {
                 // replace input of consumer
-                const TensorNode *old_output = op->output(i);
-                TensorNode *new_output = same_op->output(i);
-                for (auto &[consumer,input_idx]: old_output->consumers()) {
-                    consumer->replaceInput(input_idx, new_output);
-                    new_output->addConsumer(consumer, input_idx);
+                const TensorNode *old = op->output(i);
+                TensorNode *replace = same_op->output(i);
+                // 逆序遍历, 因为过程中会删除consumer
+                for (int j = old->numConsumer() - 1; j >= 0; --j) {
+                    auto &[consumer,input_idx] = old->consumer(i);
+                    Graph::replaceInput(consumer, input_idx, replace);
                 }
-                graph.eraseTensor(old_output->id());
             }
-            unlinkInputOfOp(op);
-            graph.eraseOp(op->id());
+            graph.unlink(op);
+            graph.eraseOp(op);
             return;
         }
         same_hash_vec.emplace_back(op);
