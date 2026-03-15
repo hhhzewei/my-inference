@@ -5,6 +5,7 @@
 #include "util/util.h"
 #include "kernel/primitive/cpu/element_wise.h"
 #include "optimize/constant_folder/op_folder.h"
+#include "graph/node/tensor_node.h"
 
 namespace my_inference {
     template<typename T, typename Func>
@@ -36,7 +37,7 @@ namespace my_inference {
                     b, b_strides.data(),
                     c,
                     numElem);
-            } else if (shape.size() == 1) {
+            } else if (shape.size() == 2) {
                 kernel::primitive::cpu::elementWiseWithStrides2D<T, Func>(
                     a, a_strides.data(),
                     b, b_strides.data(),

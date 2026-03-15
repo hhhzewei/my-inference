@@ -9,7 +9,7 @@
 namespace my_inference {
     class CommonSubexpressionElimination : public Optimizer {
     public:
-        void operator()(Graph &) override;
+        void operator()(Graph *) override;
 
     private:
         uint64_t hash(const OpNode *);

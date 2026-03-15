@@ -18,7 +18,7 @@ namespace my_inference {
         Float32,
     };
 
-    inline DataType getDataType(const int &onnx_type) {
+    inline DataType getDataType(const int onnx_type) {
         // 使用静态 map，确保只初始化一次
         static const std::unordered_map<int, DataType> type_map = {
             {onnx::TensorProto_DataType_UNDEFINED, DataType::Unknown},
@@ -35,5 +35,15 @@ namespace my_inference {
         }
 
         return DataType::Unknown;
+    }
+
+    inline size_t getDataTypeSize(const DataType data_type) {
+        static const std::unordered_map<DataType, size_t> map = {
+            {DataType::Float32, sizeof(float)}
+        };
+        if (const auto it = map.find(data_type); it != map.end()) {
+            return it->second;
+        }
+        return 0;
     }
 }

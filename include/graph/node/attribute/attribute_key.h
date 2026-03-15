@@ -18,7 +18,9 @@ namespace my_inference {
         Strides,
         // gemm
         TransA,
-        TransB
+        TransB,
+        // batch norm
+        Epsilon
     };
 
     inline AttributeKey getAttributeKey(const std::string &name) {
@@ -33,7 +35,10 @@ namespace my_inference {
             {"strides", AttributeKey::Strides},
             // gemm
             {"transA", AttributeKey::TransA},
-            {"transB", AttributeKey::TransB}
+            {"transB", AttributeKey::TransB},
+            // batch norm
+            {"epsilon", AttributeKey::Epsilon}
+
         };
         const auto it = map.find(name);
         if (it == map.end()) {

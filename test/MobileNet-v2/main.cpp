@@ -8,7 +8,7 @@
 
 int main(int argc, char *argv[]) {
     const auto graph = my_inference::Graph::make("../../../onnx/MobileNet-v2.onnx");
-    my_inference::DeadCodeElimination()(*graph);
-    my_inference::ConstantFolding()(*graph);
+    my_inference::DeadCodeElimination()(graph.get());
+    my_inference::ConstantFolding()(graph.get());
     return 0;
 }

@@ -4,7 +4,6 @@
 
 #ifndef MY_INFERENCE_GRAPH_UTIL_H
 #define MY_INFERENCE_GRAPH_UTIL_H
-#include <memory>
 
 #include "graph/node/tensor_node.h"
 #include "graph/node/op_node.h"

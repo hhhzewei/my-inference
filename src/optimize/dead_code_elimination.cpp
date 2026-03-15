@@ -6,10 +6,10 @@
 
 using namespace my_inference;
 
-void DeadCodeElimination::operator()(Graph &graph) {
+void DeadCodeElimination::operator()(Graph *graph) {
     std::set<OpNode::Id> used_op;
     std::queue<OpNode *> op_queue;
-    op_queue.push(graph.sinkOp());
+    op_queue.push(graph->sinkOp());
     //bfs
     while (!op_queue.empty()) {
         const OpNode *op = op_queue.front();
@@ -21,5 +21,5 @@ void DeadCodeElimination::operator()(Graph &graph) {
         }
         used_op.insert(op->id());
     }
-    graph.shrinkOp(used_op);
+    graph->shrinkOp(used_op);
 }

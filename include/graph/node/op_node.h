@@ -6,11 +6,11 @@
 
 #include <iostream>
 #include <optional>
-#include "graph/node/attribute/attribute_key.h"
-#include "graph/node/attribute/attribute_value.h"
 #include "graph/node/op_type.h"
 #include "graph/node/tensor_dim.h"
 #include "kernel/device.h"
+#include "graph/node/attribute/attribute_key.h"
+#include "graph/node/attribute/attribute_value.h"
 
 namespace my_inference {
     //前向声明避免循环include
@@ -26,13 +26,18 @@ namespace my_inference {
         }
 
         OpNode(const Id id, std::string name, const OpType &type,
-               std::vector<TensorNode *> outputs) : name_(std::move(name)),
-                                                    id_(id), type_(type), outputs_(std::move(outputs)) {
+               std::vector<TensorNode *> inputs, std::vector<TensorNode *> outputs,
+               std::map<AttributeKey, AttributeValue> attribute_map) : name_(std::move(name)), id_(id), type_(type),
+                                                                       inputs_(std::move(inputs)),
+                                                                       outputs_(std::move(outputs)),
+                                                                       attributes_(std::move(attribute_map)) {
+            initInput();
         }
 
         void init(std::vector<TensorNode *> inputs, std::vector<TensorNode *> outputs) {
             inputs_ = std::move(inputs);
             outputs_ = std::move(outputs);
+            initInput();
         }
 
         [[nodiscard]] Id id() const {
@@ -131,6 +136,8 @@ namespace my_inference {
         }
 
     private:
+        void initInput();
+
         std::string name_;
         Id id_;
         OpType type_;

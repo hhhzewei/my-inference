@@ -7,7 +7,7 @@
 
 using namespace my_inference;
 
-void ConstantFolding::operator()(Graph &graph) {
+void ConstantFolding::operator()(Graph *graph) {
     auto op_func = [&](OpNode *op) {
         if (op->type() == OpType::Source || op->type() == OpType::Sink || op->type() == OpType::Constant) {
             return;
@@ -26,17 +26,18 @@ void ConstantFolding::operator()(Graph &graph) {
         }
         // create constant node and replace output's producer
         for (TensorNode *output: op->outputs()) {
-            graph.makeConstant(output);
+            const auto producer = graph->createOp(OpType::Constant, {}, {output}, {});
+            graph->replaceProducer(output, producer, 0);
         }
         // remove op from consumer of input
-        graph.unlink(op);
+        graph->unlink(op);
         // remove useless constant
         for (const TensorNode *input: op->inputs()) {
             if (input->numConsumer() == 0) {
-                graph.eraseConstant(input->producer());
+                graph->eraseOp(input->producer());
             }
         }
-        graph.eraseOp(op);
+        graph->eraseOp(op);
     };
-    graph.forwardTopoTraverse(op_func);
+    graph->forwardTopoTraverse(op_func);
 }

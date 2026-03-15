@@ -5,7 +5,7 @@
 
 #include "optimize/common_subexpression_elimination.h"
 
-void my_inference::CommonSubexpressionElimination::operator()(Graph &graph) {
+void my_inference::CommonSubexpressionElimination::operator()(Graph *graph) {
     std::map<uint64_t, std::vector<OpNode *> > op_map;
     auto op_func = [&](OpNode *op) {
         if (op->type() == OpType::Source || op->type() == OpType::Sink || op->type() == OpType::Constant) { return; }
@@ -26,17 +26,17 @@ void my_inference::CommonSubexpressionElimination::operator()(Graph &graph) {
                 TensorNode *replace = same_op->output(i);
                 // 逆序遍历, 因为过程中会删除consumer
                 for (int j = old->numConsumer() - 1; j >= 0; --j) {
-                    auto &[consumer,input_idx] = old->consumer(i);
+                    auto &[consumer,input_idx] = old->consumer(j);
                     Graph::replaceInput(consumer, input_idx, replace);
                 }
             }
-            graph.unlink(op);
-            graph.eraseOp(op);
+            graph->unlink(op);
+            graph->eraseOp(op);
             return;
         }
         same_hash_vec.emplace_back(op);
     };
-    graph.forwardTopoTraverse(op_func);
+    graph->forwardTopoTraverse(op_func);
 }
 
 uint64_t my_inference::CommonSubexpressionElimination::hash(const OpNode *op) {

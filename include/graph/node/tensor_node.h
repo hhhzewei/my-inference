@@ -32,9 +32,16 @@ namespace my_inference {
 
         TensorNode(TensorNode &&) = delete;
 
-        TensorNode(const Id &id, std::string name,
+        TensorNode(const Id id, std::string name,
                    OpNode *producer, const int output_idx) : id_(id), name_(std::move(name)), producer_(producer),
                                                              output_idx_(output_idx) {
+        }
+
+        TensorNode(const Id id, std::string name,
+                   OpNode *producer, const int output_idx, DataType data_type, std::vector<TensorDim> shape,
+                   void *raw_data) : id_(id), name_(std::move(name)), producer_(producer),
+                                     output_idx_(output_idx), data_type_(data_type), shape_(std::move(shape)),
+                                     data_(static_cast<char *>(raw_data)) {
         }
 
         ~TensorNode() {
@@ -73,11 +80,7 @@ namespace my_inference {
             shape_ = shape;
         }
 
-        [[nodiscard]] bool hasShape() const {
-            return !shape_.empty();
-        }
-
-        TensorDim &dim(const int i) {
+        [[nodiscard]] const TensorDim &dim(const int i) const {
             return shape_[i];
         }
 
@@ -104,12 +107,12 @@ namespace my_inference {
         }
 
         void initData(const std::string &data_string) {
-            data_ = static_cast<char *>(malloc(data_string.size()));
-            std::memcpy(data_, data_string.data(), data_string.size());
+            data_ = malloc(data_string.size());
+            memcpy(data_, data_string.data(), data_string.size());
         }
 
         void setData(void *data) {
-            data_ = static_cast<char *>(data);
+            data_ = data;
         }
 
         void removeProducer() {
@@ -155,9 +158,9 @@ namespace my_inference {
         std::string name_;
         OpNode *producer_ = nullptr;
         unsigned output_idx_;
-        std::vector<TensorDim> shape_{};
         DataType data_type_ = DataType::Unknown;
-        char *data_ = nullptr;
+        std::vector<TensorDim> shape_{};
+        void *data_ = nullptr;
         // 尽管consumer的顺序没有意义，但是元素数少时vector性能比set更好
         std::vector<ConsumerInfo> consumer_infos_{};
     };

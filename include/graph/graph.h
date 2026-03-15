@@ -11,7 +11,6 @@
 #include "graph/node/op_node.h"
 #include "graph/node/tensor_node.h"
 #include "graph/node/tensor_type.h"
-#include "graph/graph_util.h"
 #include "util/id_generator.h"
 
 namespace my_inference {
@@ -22,8 +21,6 @@ namespace my_inference {
         using OpId = OpNode::Id;
 
         static std::unique_ptr<Graph> make(const std::string &onnx_path);
-
-        Graph() = default;
 
         ~Graph() = default;
 
@@ -42,11 +39,13 @@ namespace my_inference {
         void replaceProducer(TensorNode *tensor, OpNode *new_producer, const int new_output_idx) const {
             tensor->producer()->replaceOutput(new_output_idx, emptyTensor());
             tensor->replaceProducer(new_producer, new_output_idx);
+            new_producer->replaceOutput(new_output_idx, tensor);
         }
 
         static void replaceInput(OpNode *op, const int input_idx, TensorNode *new_input) {
             op->input(input_idx)->removeConsumer(op, input_idx);
             op->replaceInput(input_idx, new_input);
+            new_input->addConsumer(op, input_idx);
         }
 
         void unlink(const OpNode *op) const {
@@ -64,16 +63,16 @@ namespace my_inference {
             for (const auto output: op->outputs()) {
                 tensor_repository_.erase(output->id());
             }
+            if (op->isConstant()) {
+                swapAndPop(constant_nodes_, [=](OpNode *op_) { return op == op_; });
+            }
             op_repository_.erase(op->id());
         }
 
-        void makeConstant(TensorNode *tensor);
+        TensorNode *createConstant(DataType data_type, std::vector<TensorDim> shape, void *raw_data);
 
-        void eraseConstant(OpNode *constant) {
-            swapAndPop(constant_nodes_, constant);
-            eraseTensor(constant->output(0)->id());
-            eraseOp(constant);
-        }
+        OpNode *createOp(OpType type, std::vector<TensorNode *> inputs = {}, std::vector<TensorNode *> outputs = {},
+                         std::map<AttributeKey, AttributeValue> attribute_map = {});
 
         template<typename OpFunc>
         void forwardTopoTraverse(const OpFunc &op_func) const {
@@ -117,6 +116,8 @@ namespace my_inference {
         void shrinkOp(const std::set<OpId> &aliveIds);
 
     private:
+        Graph() = default;
+
         using IdType = uint32_t;
 
         void init(const std::string &onnx_path);
@@ -181,9 +182,6 @@ namespace my_inference {
                 if constexpr (TENSOR_TYPE == TensorType::INPUT || TENSOR_TYPE == TensorType::OUTPUT) {
                     tensors.emplace_back(tensor);
                 }
-                if constexpr (TENSOR_TYPE == TensorType::OUTPUT) {
-                    tensor->addConsumer(sinkOp(), i);
-                }
             }
             if constexpr (TENSOR_TYPE == TensorType::INPUT) {
                 sourceOp_->init({}, std::move(tensors));
@@ -206,6 +204,13 @@ namespace my_inference {
 
         void inferDataTypeAndShape() const;
 
+        TensorNode *createTensor(OpNode *producer, int output_idx, DataType data_type,
+                                 std::vector<TensorDim> shape, void *raw_data);
+
+        TensorNode *createTensor(std::string name, OpNode *producer, int output_idx,
+                                 DataType data_type = DataType::Unknown, std::vector<TensorDim> shape = {},
+                                 void *raw_data = nullptr);
+
         [[nodiscard]] std::map<OpNode::Id, size_t> opInDegrees() const;
 
         [[nodiscard]] std::map<OpNode::Id, size_t> opOutDegrees() const;
@@ -214,17 +219,17 @@ namespace my_inference {
             return empty_tensor_.get();
         }
 
-        void eraseTensor(const TensorId id) {
-            tensor_repository_.erase(id);
-        }
-
         constexpr static TensorId EMPTY_TENSOR_ID = 0;
         std::unique_ptr<TensorNode> empty_tensor_ = std::make_unique<TensorNode>(
             EMPTY_TENSOR_ID, "__EMPTY_TENSOR__", nullptr, 0);
         IdGenerator<OpId, 0> op_id_generator_{};
         IdGenerator<TensorId, EMPTY_TENSOR_ID + 1> tensor_id_generator_{};
-        std::unique_ptr<OpNode> sourceOp_;
-        std::unique_ptr<OpNode> sinkOp_;
+        std::unique_ptr<OpNode> sourceOp_ = std::make_unique<OpNode>(op_id_generator_.next(), "__GRAPH_SOURCE__",
+                                                                     OpType::Source,
+                                                                     std::map<AttributeKey, AttributeValue>{});
+        std::unique_ptr<OpNode> sinkOp_ = std::make_unique<OpNode>(op_id_generator_.next(), "__GRAPH_SINK__",
+                                                                   OpType::Sink,
+                                                                   std::map<AttributeKey, AttributeValue>{});
         std::vector<OpNode *> constant_nodes_;
         std::map<OpId, std::unique_ptr<OpNode> > op_repository_;
         std::map<TensorId, std::unique_ptr<TensorNode> > tensor_repository_;

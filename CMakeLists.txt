@@ -22,17 +22,25 @@ add_library(my_inference STATIC src/graph/graph.cpp
         src/graph/node/op_node.cpp
         src/graph/attribute_propagate/conv_attr_propagator.cpp
         src/graph/attribute_propagate/gemm_attr_propagator.cpp
+        # data type inference
         src/graph/date_type_infer/data_type_infer.cpp
-        # 形状推导
+        # shape inference
         src/graph/shape_infer/identity_shape_infer.cpp
         src/graph/shape_infer/broadcast_shape_infer.cpp
         src/graph/shape_infer/conv_shape_infer.cpp
         src/graph/shape_infer/gemm_shape_infer.cpp
         src/graph/shape_infer/stride.cpp
-        # 图优化
+        # dce
         src/optimize/dead_code_elimination.cpp
+        # constant folding
         src/optimize/constant_folding.cpp
+        # cse
         src/optimize/common_subexpression_elimination.cpp
+        # op fusion
+        src/optimize/op_fusion.cpp
+        src/optimize/op_fusion/op_fusion_pattern.cpp
+        src/optimize/op_fusion/conv_batchnorm_fuser.cpp
+        # util
         src/util/util.cpp
         src/util/onnx_util.cpp
 )

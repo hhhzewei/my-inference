@@ -40,6 +40,10 @@ namespace my_inference {
             return v1.value_ == v2.value_;
         }
 
+        friend bool operator!=(const AttributeValue &o1, const AttributeValue &o2) {
+            return o1.value_ == o2.value_;
+        }
+
     private:
         std::variant<float, int64_t, std::vector<int64_t>, std::vector<float> > value_;
     };

@@ -12,7 +12,7 @@ namespace my_inference {
     public:
         virtual ~Optimizer() = default;
 
-        virtual void operator()(Graph &graph) = 0;
+        virtual void operator()(Graph *graph) = 0;
     };
 
     inline Optimizer *getOptimizer(const PassType &type) {

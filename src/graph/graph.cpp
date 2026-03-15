@@ -12,17 +12,12 @@
 using namespace my_inference;
 
 std::unique_ptr<Graph> Graph::make(const std::string &onnx_path) {
-    auto graph = std::make_unique<Graph>();
+    const auto graph = new Graph();
     graph->init(onnx_path);
-    return graph;
+    return std::unique_ptr<Graph>(graph);
 }
 
 void Graph::init(const std::string &onnx_path) {
-    sourceOp_ = std::make_unique<OpNode>(op_id_generator_.next(), "__GRAPH_SOURCE__", OpType::Source,
-                                         std::map<AttributeKey, AttributeValue>{});
-    sinkOp_ = std::make_unique<OpNode>(op_id_generator_.next(), "__GRAPH_SINK__", OpType::Sink,
-                                       std::map<AttributeKey, AttributeValue>{});
-
     loadOnnx(onnx_path);
     inferDataTypeAndShape();
 }
@@ -49,16 +44,8 @@ void Graph::loadOnnx(const std::string &onnx_path) {
         OpNode *op = global_op_map[node_proto.name()];
         std::vector<TensorNode *> inputs;
         inputs.reserve(node_proto.input_size());
-        for (int i = 0; i < node_proto.input_size(); ++i) {
-            auto &input_name = node_proto.input(i);
-            TensorNode *input = global_tensor_map[input_name];
-            inputs.emplace_back(input);
-            input->addConsumer(op, i);
-        }
-        // 输入排序
-        if (isInputCommutative(op->type())) {
-            std::sort(inputs.begin(), inputs.end(),
-                      [](const TensorNode *t1, const TensorNode *t2) { return t1->id() < t2->id(); });
+        for (const auto &input_name: node_proto.input()) {
+            inputs.emplace_back(global_tensor_map[input_name]);
         }
         std::vector<TensorNode *> outputs;
         outputs.reserve(node_proto.output_size());
@@ -168,15 +155,40 @@ std::map<OpNode::Id, size_t> Graph::opOutDegrees() const {
     return result;
 }
 
-void Graph::makeConstant(TensorNode *tensor) {
+
+TensorNode *Graph::createConstant(const DataType data_type, std::vector<TensorDim> shape, void *raw_data) {
+    OpNode *producer = createOp(OpType::Constant);
+    TensorNode *tensor = createTensor(producer, 0, data_type, std::move(shape), raw_data);
+    producer->init({}, {tensor});
+    return tensor;
+}
+
+OpNode *Graph::createOp(OpType type, std::vector<TensorNode *> inputs, std::vector<TensorNode *> outputs,
+                        std::map<AttributeKey, AttributeValue> attribute_map) {
     auto id = op_id_generator_.next();
     auto [it,success] = op_repository_.emplace(
-        id, std::make_unique<OpNode>(id,
-                                     "__CONSTANT__" + std::to_string(id) + "__",
-                                     OpType::Constant, std::vector{tensor}));
-    const auto &unique_ptr = it->second;
-    constant_nodes_.emplace_back(unique_ptr.get());
-    replaceProducer(tensor, unique_ptr.get(), 0);
+        id, std::make_unique<OpNode>(id, std::to_string(id), type,
+                                     std::move(inputs), std::move(outputs), std::move(attribute_map)));
+    const auto &op = it->second.get();
+    if (op->type() == OpType::Constant) {
+        constant_nodes_.emplace_back(op);
+    }
+    return op;
+}
+
+TensorNode *Graph::createTensor(OpNode *producer, const int output_idx, const DataType data_type, std::vector<TensorDim> shape,
+                                void *raw_data) {
+    return createTensor("__OP_" + std::to_string(producer->id()) + "_OUTPUT_",
+                        producer, output_idx, data_type, std::move(shape), raw_data);
+}
+
+TensorNode *Graph::createTensor(std::string name, OpNode *producer, int output_idx, DataType data_type,
+                                std::vector<TensorDim> shape, void *raw_data) {
+    TensorId id = tensor_id_generator_.next();
+    const auto [it, isSuccess] = tensor_repository_.emplace(
+        id, std::make_unique<TensorNode>(id, std::move(name), producer, output_idx, data_type, std::move(shape),
+                                         raw_data));
+    return it->second.get();
 }
 
 void Graph::shrinkOp(const std::set<OpId> &aliveIds) {

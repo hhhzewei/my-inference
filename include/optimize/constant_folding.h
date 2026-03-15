@@ -9,7 +9,7 @@
 namespace my_inference {
     class ConstantFolding : Optimizer {
     public:
-        void operator()(Graph &graph) override;
+        void operator()(Graph *graph) override;
     };
 }
 
