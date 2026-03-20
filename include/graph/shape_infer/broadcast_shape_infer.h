@@ -5,19 +5,14 @@
 #ifndef MY_INFERENCE_BROADCAST_SHAPE_INFER_H
 #define MY_INFERENCE_BROADCAST_SHAPE_INFER_H
 #include "graph/shape_infer/shape_infer.h"
+#include "util/Singleton.h"
 
 namespace my_inference {
-    class BroadcastShapeInfer : public ShapeInfer {
+    class BroadcastShapeInfer : public ShapeInfer, public Singleton<BroadcastShapeInfer> {
+        DECLARE_SINGLETON(BroadcastShapeInfer)
+
     public:
-        static BroadcastShapeInfer *instance() {
-            static BroadcastShapeInfer instance_;
-            return &instance_;
-        }
-
         void operator()(OpNode *) override;
-
-    private:
-        BroadcastShapeInfer() = default;
     };
 }
 #endif //MY_INFERENCE_BROADCAST_SHAPE_INFER_H

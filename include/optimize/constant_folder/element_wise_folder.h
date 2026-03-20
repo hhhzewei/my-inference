@@ -9,13 +9,10 @@
 
 namespace my_inference {
     template<typename T, typename Func>
-    class ElementWiseFolder : public OpFolder {
-    public:
-        static ElementWiseFolder *instance() {
-            static ElementWiseFolder instance_;
-            return &instance_;
-        }
+    class ElementWiseFolder : public OpFolder, public Singleton<ElementWiseFolder<T, Func> > {
+        DECLARE_SINGLETON(ElementWiseFolder)
 
+    public:
         void operator()(OpNode *op) override {
             const T *a = static_cast<T *>(op->input(0)->data());
             const T *b = static_cast<T *>(op->input(1)->data());
@@ -44,8 +41,5 @@ namespace my_inference {
                     c, shape.data(), c_strides.data());
             }
         }
-
-    private:
-        ElementWiseFolder() = default;
     };
 }

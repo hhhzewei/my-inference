@@ -7,9 +7,12 @@
 #include "optimize/optimizer.h"
 #include "optimize/op_fusion/conv_batchnorm_fuser.h"
 #include "optimize/op_fusion/op_fusion_pattern.h"
+#include "util/Singleton.h"
 
 namespace my_inference {
-    class OpFuse : Optimizer {
+    class OpFusion : Optimizer, public Singleton<OpFusion> {
+        DECLARE_SINGLETON(OpFusion)
+
     public:
         void operator()(Graph *graph) override;
 

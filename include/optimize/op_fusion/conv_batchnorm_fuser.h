@@ -5,9 +5,12 @@
 #ifndef MY_INFERENCE_CONV_BATCHNORM_FUSER_H
 #define MY_INFERENCE_CONV_BATCHNORM_FUSER_H
 #include "optimize/op_fusion/op_fusion_pattern.h"
+#include "util/Singleton.h"
 
 namespace my_inference {
-    class ConvBatchNormFuser : public OpFuser {
+    class ConvBatchNormFuser : public OpFuser, public Singleton<ConvBatchNormFuser> {
+        DECLARE_SINGLETON(ConvBatchNormFuser)
+
     public:
         static OpFusionPattern pattern() {
             OpFusionPattern::Builder builder;
@@ -22,19 +25,12 @@ namespace my_inference {
                                  {InputVarProducerId, 0}
                              })
                     .outputs({{BatchNormId, 0}})
-                    .fuser(instance()).build();
+                    .fuser(&instance()).build();
         }
 
         bool operator()(Graph *graph, const std::map<int, OpNode *> &pattern2op) override;
 
     private:
-        static ConvBatchNormFuser *instance() {
-            static ConvBatchNormFuser conv_batch_norm_fuser;
-            return &conv_batch_norm_fuser;
-        }
-
-        ConvBatchNormFuser() = default;
-
         enum PatternId :int {
             WeightProducerId, ConvId,
             InputMeanProducerId, InputVarProducerId, ScaleProducerId, BetaProducerId, BatchNormId

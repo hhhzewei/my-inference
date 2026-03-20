@@ -12,8 +12,8 @@
 namespace my_inference {
     inline void propagateAttribute(OpNode *op) {
         static std::map<OpType, AttrPropagator *> map = {
-            {OpType::Conv, ConvAttrPropagator::instance()},
-            {OpType::Gemm, GemmAttrPropagator::instance()},
+            {OpType::Conv, &ConvAttrPropagator::instance()},
+            {OpType::Gemm, &GemmAttrPropagator::instance()},
         };
         const auto it = map.find(op->type());
         if (it == map.end()) {

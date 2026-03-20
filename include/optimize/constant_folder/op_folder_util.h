@@ -32,19 +32,19 @@ namespace my_inference {
         static std::map<FolderKey, OpFolder *> map = {
             {
                 getFolderKey(OpType::Add, DataType::Float32, DeviceType::CPU),
-                ElementWiseFolder<float, AddFunctor<float> >::instance(),
+                &ElementWiseFolder<float, AddFunctor<float> >::instance(),
             },
             {
                 getFolderKey(OpType::Sub, DataType::Float32, DeviceType::CPU),
-                ElementWiseFolder<float, SubFunctor<float> >::instance(),
+                &ElementWiseFolder<float, SubFunctor<float> >::instance(),
             },
             {
                 getFolderKey(OpType::Mul, DataType::Float32, DeviceType::CPU),
-                ElementWiseFolder<float, MulFunctor<float> >::instance(),
+                &ElementWiseFolder<float, MulFunctor<float> >::instance(),
             },
             {
                 getFolderKey(OpType::Div, DataType::Float32, DeviceType::CPU),
-                ElementWiseFolder<float, DivFunctor<float> >::instance(),
+                &ElementWiseFolder<float, DivFunctor<float> >::instance(),
             }
         };
         const FolderKey key = getFolderKey(op);

@@ -5,19 +5,14 @@
 #ifndef MY_INFERENCE_GEMM_SHAPE_INFER_H
 #define MY_INFERENCE_GEMM_SHAPE_INFER_H
 #include "graph/shape_infer/shape_infer.h"
+#include "util/Singleton.h"
 
 namespace my_inference {
-    class GemmShapeInfer : public ShapeInfer {
+    class GemmShapeInfer : public ShapeInfer, public Singleton<GemmShapeInfer> {
+        DECLARE_SINGLETON(GemmShapeInfer)
+
     public:
-        static GemmShapeInfer *instance() {
-            static GemmShapeInfer instance_;
-            return &instance_;
-        }
-
         void operator()(OpNode *) override;
-
-    private:
-        GemmShapeInfer() = default;
     };
 }
 

@@ -5,23 +5,19 @@
 #ifndef MY_INFERENCE_CONV_ATTR_PROPAGATOR_H
 #define MY_INFERENCE_CONV_ATTR_PROPAGATOR_H
 #include "graph/attribute_propagate/attr_propagator.h"
+#include "util/Singleton.h"
 
 namespace my_inference {
-    class ConvAttrPropagator : public AttrPropagator {
-    public:
-        static ConvAttrPropagator *instance() {
-            static ConvAttrPropagator instance_;
-            return &instance_;
-        }
+    class ConvAttrPropagator : public AttrPropagator, public Singleton<ConvAttrPropagator> {
+        DECLARE_SINGLETON(ConvAttrPropagator)
 
+    public:
         void operator()(OpNode *) override;
 
     private:
         static constexpr int64_t DEFAULT_PAD = 0;
         static constexpr int64_t DEFAULT_STRIDE = 1;
         static constexpr int64_t DEFAULT_DIALATION = 1;
-
-        ConvAttrPropagator() = default;
     };
 }
 
