@@ -1,0 +1,2 @@
+Graph使用op_repository管理OpNode，还是单纯保存SourceOp、SinkOp，使用shared_ptr作为关系链接？
+后者表面上天然实现了dce，且不用管理全局容器，但是构图时如果出现孤岛子图，后者会因为算子张量间双向指针的循环引用，导致内存泄露。
