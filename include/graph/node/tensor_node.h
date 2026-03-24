@@ -7,6 +7,7 @@
 
 #include "graph/node/data_type.h"
 #include "graph/node/tensor_dim.h"
+#include "memory/memory_info.h"
 #include "util/util.h"
 
 
@@ -38,10 +39,17 @@ namespace my_inference {
         }
 
         TensorNode(const Id id, std::string name,
-                   OpNode *producer, const int output_idx, DataType data_type, std::vector<TensorDim> shape,
+                   OpNode *producer, const int output_idx, const DataType data_type, std::vector<TensorDim> shape,
                    void *raw_data) : id_(id), name_(std::move(name)), producer_(producer),
                                      output_idx_(output_idx), data_type_(data_type), shape_(std::move(shape)),
                                      data_(static_cast<char *>(raw_data)) {
+            initMemSize();
+        }
+
+        void init(const DataType data_type, const std::vector<TensorDim> &shape) {
+            data_type_ = data_type;
+            shape_ = shape;
+            initMemSize();
         }
 
         ~TensorNode() {
@@ -49,7 +57,6 @@ namespace my_inference {
                 free(data_);
             }
         }
-
 
         [[nodiscard]] std::string name() const {
             return name_;
@@ -139,11 +146,6 @@ namespace my_inference {
             });
         }
 
-        void init(const DataType data_type, const std::vector<TensorDim> &shape) {
-            data_type_ = data_type;
-            shape_ = shape;
-        }
-
         [[nodiscard]] unsigned outputIdx() const {
             return output_idx_;
         }
@@ -151,6 +153,26 @@ namespace my_inference {
         void replaceProducer(OpNode *producer, const int output_idx) {
             producer_ = producer;
             output_idx_ = output_idx;
+        }
+
+        void updateStartTime(const int idx) const {
+            memory_info_->updateStartTime(idx);
+        }
+
+        void updateEndTime(const int idx) const {
+            memory_info_->updateEndTime(idx);
+        }
+
+        void initMemSize() {
+            TensorDim size(getDataTypeSize(data_type_));
+            for (int i = static_cast<int>(shape_.size()) - 1; i >= 0; --i) {
+                size = size * shape_[i];
+            }
+            memory_info_ = std::make_shared<MemoryInfo>(size, getDataTypeAlignSize(data_type_));
+        }
+
+        [[nodiscard]] const std::shared_ptr<MemoryInfo> &memoryInfo() const {
+            return memory_info_;
         }
 
     private:
@@ -161,7 +183,7 @@ namespace my_inference {
         DataType data_type_ = DataType::Unknown;
         std::vector<TensorDim> shape_{};
         void *data_ = nullptr;
-        // 尽管consumer的顺序没有意义，但是元素数少时vector性能比set更好
-        std::vector<ConsumerInfo> consumer_infos_{};
+        std::vector<ConsumerInfo> consumer_infos_{}; // 尽管consumer的顺序没有意义，但是元素数少时vector性能比set更好
+        std::shared_ptr<MemoryInfo> memory_info_;
     };
 }

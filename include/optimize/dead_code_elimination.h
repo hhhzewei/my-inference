@@ -8,7 +8,7 @@
 #include "util/Singleton.h"
 
 namespace my_inference {
-    class DeadCodeElimination : Optimizer, public Singleton<DeadCodeElimination> {
+    class DeadCodeElimination : public Optimizer, public Singleton<DeadCodeElimination> {
         DECLARE_SINGLETON(DeadCodeElimination)
 
     public:

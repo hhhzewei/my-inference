@@ -7,6 +7,8 @@
 #include "graph/attribute_propagate/attr_propagate_util.h"
 #include "graph/data_type_infer/data_type_infer.h"
 #include "graph/shape_infer/shape_infer_util.h"
+#include "memory/memory_planning.h"
+#include "optimize/optimizer_util.h"
 #include "util/onnx_util.h"
 
 using namespace my_inference;
@@ -15,6 +17,17 @@ std::unique_ptr<Graph> Graph::make(const std::string &onnx_path) {
     const auto graph = new Graph();
     graph->init(onnx_path);
     return std::unique_ptr<Graph>(graph);
+}
+
+void Graph::optimize() {
+    for (Optimizer *optimizer: CommonOptimizers) {
+        (*optimizer)(this);
+    }
+}
+
+void Graph::prepare() {
+    topoSort();
+    planMemory();
 }
 
 void Graph::init(const std::string &onnx_path) {
@@ -132,9 +145,12 @@ TensorNode *Graph::createTensor(const std::string &name, OpNode *producer, int o
 }
 
 void Graph::inferDataTypeAndShape() const {
-    auto op_func = [](OpNode *op) {
+    auto op_func = [&](OpNode *op) {
         inferDataType(op);
         inferShape(op);
+        for (const auto output: op->outputs()) {
+            output->initMemSize();
+        }
     };
     forwardTopoTraverse(op_func);
 }
@@ -144,6 +160,8 @@ std::map<OpNode::Id, size_t> Graph::opInDegrees() const {
     for (const auto &[id, ptr]: op_repository_) {
         result[id] = ptr->numInput();
     }
+    result[sourceOp_->id()] = 0;
+    result[sinkOp_->id()] = sinkOp_->numInput();
     return result;
 }
 
@@ -152,7 +170,54 @@ std::map<OpNode::Id, size_t> Graph::opOutDegrees() const {
     for (const auto &[id, ptr]: op_repository_) {
         result[id] = ptr->numConsumer();
     }
+    result[sourceOp_->id()] = sourceOp_->numConsumer();
+    result[sinkOp_->id()] = 0;
     return result;
+}
+
+void Graph::topoSort() {
+    topo_ops_.reserve(op_repository_.size());
+    int idx = 0;
+    auto op_func = [&](OpNode *op) {
+        if (op->type() == OpType::Constant) {
+            return;
+        }
+        topo_ops_.emplace_back(op);
+        for (const auto input: op->inputs()) {
+            input->updateEndTime(idx);
+        }
+        for (const auto output: op->outputs()) {
+            output->updateStartTime(idx);
+        }
+        ++idx;
+    };
+    forwardTopoTraverse(op_func);
+    for (const auto constant: constant_nodes_) {
+        for (const auto output: constant->outputs()) {
+            output->updateStartTime(0);
+            output->updateEndTime(idx);
+        }
+    }
+}
+
+void Graph::planMemory() {
+    std::set<MemoryInfo *> unique_set;
+    std::vector<MemoryInfo *> memory_infos;
+    memory_infos.reserve(tensor_repository_.size());
+    int64_t max_memory = 0;
+    for (auto &[id,tensor]: tensor_repository_) {
+        MemoryInfo *memory_info = tensor->memoryInfo().get();
+        if (unique_set.count(memory_info) == 1) {
+            continue;
+        }
+        unique_set.emplace(memory_info);
+        memory_infos.emplace_back(memory_info);
+        max_memory += memory_info->size().value();
+    }
+    const int64_t res = planMemoryOffset(std::move(memory_infos));
+    std::cout << "expected: " << max_memory << "B, plan: " << res << "B, saved " << 100 - static_cast<double>(res) *
+            100.0 / static_cast<double>(max_memory)
+            << "%" << std::endl;
 }
 
 
@@ -176,7 +241,8 @@ OpNode *Graph::createOp(OpType type, std::vector<TensorNode *> inputs, std::vect
     return op;
 }
 
-TensorNode *Graph::createTensor(OpNode *producer, const int output_idx, const DataType data_type, std::vector<TensorDim> shape,
+TensorNode *Graph::createTensor(OpNode *producer, const int output_idx, const DataType data_type,
+                                std::vector<TensorDim> shape,
                                 void *raw_data) {
     return createTensor("__OP_" + std::to_string(producer->id()) + "_OUTPUT_",
                         producer, output_idx, data_type, std::move(shape), raw_data);

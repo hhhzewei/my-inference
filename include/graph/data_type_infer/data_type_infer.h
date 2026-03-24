@@ -6,7 +6,7 @@
 #include "graph/node/op_node.h"
 
 namespace my_inference {
-    void inferDataType(OpNode *op);
+    void inferDataType(const OpNode *op);
 
     void inferDataType(const OpNode *op, DataType target);
 }

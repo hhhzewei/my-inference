@@ -37,13 +37,23 @@ namespace my_inference {
         return DataType::Unknown;
     }
 
-    inline size_t getDataTypeSize(const DataType data_type) {
-        static const std::unordered_map<DataType, size_t> map = {
+    inline int getDataTypeSize(const DataType data_type) {
+        static const std::unordered_map<DataType, int> map = {
             {DataType::Float32, sizeof(float)}
         };
         if (const auto it = map.find(data_type); it != map.end()) {
             return it->second;
         }
         return 0;
+    }
+
+    inline int getDataTypeAlignSize(const DataType data_type) {
+        static const std::unordered_map<DataType, int> map = {
+            {DataType::Float32, alignof(float)}
+        };
+        if (const auto it = map.find(data_type); it != map.end()) {
+            return it->second;
+        }
+        return alignof(max_align_t);
     }
 }

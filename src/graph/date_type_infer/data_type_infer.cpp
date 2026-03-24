@@ -8,7 +8,7 @@
 
 using namespace my_inference;
 
-void my_inference::inferDataType(OpNode *op) {
+void my_inference::inferDataType(const OpNode *op) {
     const OpType op_type = op->type();
     if (op_type == OpType::Source || op_type == OpType::Sink || op_type == OpType::Constant) {
         return;

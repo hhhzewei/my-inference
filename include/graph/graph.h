@@ -36,6 +36,10 @@ namespace my_inference {
             return sinkOp_.get();
         }
 
+        void optimize();
+
+        void prepare();
+
         void replaceProducer(TensorNode *tensor, OpNode *new_producer, const int new_output_idx) const {
             tensor->producer()->replaceOutput(new_output_idx, emptyTensor());
             tensor->replaceProducer(new_producer, new_output_idx);
@@ -64,7 +68,7 @@ namespace my_inference {
                 tensor_repository_.erase(output->id());
             }
             if (op->isConstant()) {
-                swapAndPop(constant_nodes_, [=](OpNode *op_) { return op == op_; });
+                swapAndPop(constant_nodes_, [=](const OpNode *op_) { return op == op_; });
             }
             op_repository_.erase(op->id());
         }
@@ -78,7 +82,7 @@ namespace my_inference {
         void forwardTopoTraverse(const OpFunc &op_func) const {
             auto op_in_degree = opInDegrees();
             std::queue<OpNode *> op_queue;
-            op_queue.push(sourceOp_.get());
+            op_queue.push(sourceOp());
             for (auto &constant_node: constant_nodes_) {
                 op_queue.push(constant_node);
             }
@@ -100,7 +104,7 @@ namespace my_inference {
         void backwardTopoTraverse(const OpFunc &op_func) {
             auto op_out_degree = opOutDegrees();
             std::queue<OpNode *> op_queue;
-            op_queue.push(sinkOp_.get());
+            op_queue.push(sinkOp());
             while (!op_queue.empty()) {
                 OpNode *op = op_queue.front();
                 op_queue.pop();
@@ -211,6 +215,10 @@ namespace my_inference {
                                  DataType data_type = DataType::Unknown, std::vector<TensorDim> shape = {},
                                  void *raw_data = nullptr);
 
+        void topoSort();
+
+        void planMemory();
+
         [[nodiscard]] std::map<OpNode::Id, size_t> opInDegrees() const;
 
         [[nodiscard]] std::map<OpNode::Id, size_t> opOutDegrees() const;
@@ -233,6 +241,7 @@ namespace my_inference {
         std::vector<OpNode *> constant_nodes_;
         std::map<OpId, std::unique_ptr<OpNode> > op_repository_;
         std::map<TensorId, std::unique_ptr<TensorNode> > tensor_repository_;
+        std::vector<OpNode *> topo_ops_;
     };
 }
 #endif //MY_INFERENCE_GRAPH_H

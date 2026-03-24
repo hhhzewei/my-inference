@@ -40,6 +40,8 @@ add_library(my_inference STATIC src/graph/graph.cpp
         src/optimize/op_fusion.cpp
         src/optimize/op_fusion/op_fusion_pattern.cpp
         src/optimize/op_fusion/conv_batchnorm_fuser.cpp
+        # memory planning
+        src/memory/memory_planning.cpp
         # util
         src/util/util.cpp
         src/util/onnx_util.cpp

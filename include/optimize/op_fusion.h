@@ -10,7 +10,7 @@
 #include "util/Singleton.h"
 
 namespace my_inference {
-    class OpFusion : Optimizer, public Singleton<OpFusion> {
+    class OpFusion : public Optimizer, public Singleton<OpFusion> {
         DECLARE_SINGLETON(OpFusion)
 
     public:
