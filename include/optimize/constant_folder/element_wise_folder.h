@@ -2,10 +2,10 @@
 // Created by hzw on 2026/2/23.
 //
 #pragma once
-#include "util/util.h"
-#include "kernel/primitive/cpu/element_wise.h"
-#include "optimize/constant_folder/op_folder.h"
 #include "graph/node/tensor_node.h"
+#include "kernel/primitive/cpu/element_wise.h"
+#include "optimize/constant_folder/op_folder_util.h"
+#include "util/math.h"
 
 namespace my_inference {
     template<typename T, typename Func>
@@ -42,4 +42,13 @@ namespace my_inference {
             }
         }
     };
+
+    REGISTER_OP_FOLDER(getFolderKey(OpType::Add, DataType::Float32, DeviceType::CPU),
+                       (&ElementWiseFolder<float, AddFunctor<float> >::instance()));
+    REGISTER_OP_FOLDER(getFolderKey(OpType::Sub, DataType::Float32, DeviceType::CPU),
+                       (&ElementWiseFolder<float, SubFunctor<float> >::instance()));
+    REGISTER_OP_FOLDER(getFolderKey(OpType::Mul, DataType::Float32, DeviceType::CPU),
+                       (&ElementWiseFolder<float, MulFunctor<float> >::instance()));
+    REGISTER_OP_FOLDER(getFolderKey(OpType::Div, DataType::Float32, DeviceType::CPU),
+                       (&ElementWiseFolder<float, DivFunctor<float> >::instance()));
 }

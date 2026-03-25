@@ -4,62 +4,17 @@
 
 #ifndef MY_INFERENCE_SHAPE_INFER_UTIL_H
 #define MY_INFERENCE_SHAPE_INFER_UTIL_H
-#include "shape_infer.h"
-#include "graph/shape_infer/identity_shape_infer.h"
-#include "graph/shape_infer/broadcast_shape_infer.h"
-#include "graph/shape_infer/conv_shape_infer.h"
+#include "graph/shape_infer/shape_infer.h"
+#include "util/factory.h"
 
 namespace my_inference {
+#define REGISTER_SHAPE_INFER(op_type,shape_infer) GENERIC_REGISTER(OpType,ShapeInfer*,op_type,shape_infer)
+
     inline void inferShape(OpNode *op) {
-        static std::map<OpType, ShapeInfer *> map{
-            // activate
-            {OpType::Relu, &IdentityShapeInfer::instance()},
-            {OpType::Sigmoid, &IdentityShapeInfer::instance()},
-            {OpType::Tanh, &IdentityShapeInfer::instance()},
-            {OpType::Gelu, &IdentityShapeInfer::instance()},
-            {OpType::Softmax, &IdentityShapeInfer::instance()},
-            {OpType::LeakyRelu, &IdentityShapeInfer::instance()},
-            // one math
-            {OpType::Exp, &IdentityShapeInfer::instance()},
-            {OpType::Log, &IdentityShapeInfer::instance()},
-            {OpType::Sqrt, &IdentityShapeInfer::instance()},
-            {OpType::Abs, &IdentityShapeInfer::instance()},
-            {OpType::Neg, &IdentityShapeInfer::instance()},
-            {OpType::Erf, &IdentityShapeInfer::instance()},
-            {OpType::Not, &IdentityShapeInfer::instance()},
-            // convert
-            {OpType::Identity, &IdentityShapeInfer::instance()},
-            {OpType::Cast, &IdentityShapeInfer::instance()},
-            {OpType::Clip, &IdentityShapeInfer::instance()},
-            // normalize
-            {OpType::LayerNormalization, &IdentityShapeInfer::instance()},
-            {OpType::BatchNormalization, &IdentityShapeInfer::instance()},
-            {OpType::InstanceNormalization, &IdentityShapeInfer::instance()},
-            // two math
-            {OpType::Add, &BroadcastShapeInfer::instance()},
-            {OpType::Sub, &BroadcastShapeInfer::instance()},
-            {OpType::Mul, &BroadcastShapeInfer::instance()},
-            {OpType::Div, &BroadcastShapeInfer::instance()},
-            {OpType::Pow, &BroadcastShapeInfer::instance()},
-            // logic
-            {OpType::Less, &BroadcastShapeInfer::instance()},
-            {OpType::Greater, &BroadcastShapeInfer::instance()},
-            {OpType::Equal, &BroadcastShapeInfer::instance()},
-            {OpType::NotEqual, &BroadcastShapeInfer::instance()},
-            {OpType::And, &BroadcastShapeInfer::instance()},
-            {OpType::Or, &BroadcastShapeInfer::instance()},
-            {OpType::Xor, &BroadcastShapeInfer::instance()},
-            {OpType::Max, &BroadcastShapeInfer::instance()},
-            {OpType::Min, &BroadcastShapeInfer::instance()},
-            {OpType::Where, &BroadcastShapeInfer::instance()},
-            // conv
-            {OpType::Conv, &ConvShapeInfer::instance()},
-        };
-        const auto it = map.find(op->type());
-        if (it == map.end()) {
-            return;
+        using ShapeInferFactory = GenericFactory<OpType, ShapeInfer *>;
+        if (ShapeInfer *shape_infer = ShapeInferFactory::instance().get(op->type())) {
+            (*shape_infer)(op);
         }
-        (*it->second)(op);
     }
 }
 #endif //MY_INFERENCE_SHAPE_INFER_UTIL_H

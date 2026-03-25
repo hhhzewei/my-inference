@@ -5,21 +5,16 @@
 #ifndef MY_INFERENCE_ATTR_PROPAGATE_UTIL_H
 #define MY_INFERENCE_ATTR_PROPAGATE_UTIL_H
 #include "graph/attribute_propagate/attr_propagator.h"
-#include "graph/attribute_propagate/conv_attr_propagator.h"
-#include "graph/attribute_propagate/gemm_attr_propagator.h"
-#include "graph/node/op_node.h"
+#include "util/factory.h"
 
 namespace my_inference {
+#define REGISTER_ATTR_PROPAGATOR(key,value) GENERIC_REGISTER(OpType,AttrPropagator*,key,value)
+
     inline void propagateAttribute(OpNode *op) {
-        static std::map<OpType, AttrPropagator *> map = {
-            {OpType::Conv, &ConvAttrPropagator::instance()},
-            {OpType::Gemm, &GemmAttrPropagator::instance()},
-        };
-        const auto it = map.find(op->type());
-        if (it == map.end()) {
-            return;
+        using AttrPropagatorFactory = GenericFactory<OpType, AttrPropagator *>;
+        if (AttrPropagator *attr_propagator = AttrPropagatorFactory::instance().get(op->type())) {
+            (*attr_propagator)(op);
         }
-        (*it->second)(op);
     }
 }
 #endif //MY_INFERENCE_ATTR_PROPAGATE_UTIL_H

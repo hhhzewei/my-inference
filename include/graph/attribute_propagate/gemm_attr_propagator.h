@@ -4,8 +4,7 @@
 
 #ifndef MY_INFERENCE_GEMM_ATTR_PROPAGATOR_H
 #define MY_INFERENCE_GEMM_ATTR_PROPAGATOR_H
-#include "graph/attribute_propagate/attr_propagator.h"
-#include "util/Singleton.h"
+#include "graph/attribute_propagate/attr_propagate_util.h"
 
 namespace my_inference {
     class GemmAttrPropagator : public AttrPropagator, public Singleton<GemmAttrPropagator> {
@@ -18,5 +17,7 @@ namespace my_inference {
         static constexpr int64_t DEFAULT_TRANS_A = false;
         static constexpr int64_t DEFAULT_TRANS_B = false;
     };
+
+    REGISTER_ATTR_PROPAGATOR(OpType::Gemm, &GemmAttrPropagator::instance());
 }
 #endif //MY_INFERENCE_GEMM_ATTR_PROPAGATOR_H

@@ -4,8 +4,7 @@
 
 #ifndef MY_INFERENCE_CONV_SHAPE_INFER_H
 #define MY_INFERENCE_CONV_SHAPE_INFER_H
-#include "graph/shape_infer/shape_infer.h"
-#include "util/Singleton.h"
+#include "graph/shape_infer/shape_infer_util.h"
 
 namespace my_inference {
     class ConvShapeInfer : public ShapeInfer, public Singleton<ConvShapeInfer> {
@@ -21,5 +20,7 @@ namespace my_inference {
             return (pad0 + pad1 - (1 + dilation * (kernel_size - 1)) + x) / stride + 1;
         }
     };
+
+    REGISTER_SHAPE_INFER(OpType::Conv, &ConvShapeInfer::instance());
 }
 #endif //MY_INFERENCE_CONV_SHAPE_INFER_H

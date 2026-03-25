@@ -4,12 +4,13 @@
 
 #ifndef MY_INFERENCE_OP_FOLDER_UTIL_H
 #define MY_INFERENCE_OP_FOLDER_UTIL_H
-#include "optimize/constant_folder/element_wise_folder.h"
 #include "optimize/constant_folder/op_folder.h"
-#include "util/math.h"
+#include "util/factory.h"
 
 namespace my_inference {
     using FolderKey = uint32_t;
+
+#define REGISTER_OP_FOLDER(folder_key,op_folder) GENERIC_REGISTER(FolderKey,OpFolder *,folder_key,op_folder)
 
     inline FolderKey getFolderKey(const OpType type, const DataType &data_type, const DeviceType &device_type) {
         constexpr unsigned KEY_BITS = sizeof(FolderKey) * 8;
@@ -29,31 +30,14 @@ namespace my_inference {
     }
 
     inline bool opFold(OpNode *op) {
-        static std::map<FolderKey, OpFolder *> map = {
-            {
-                getFolderKey(OpType::Add, DataType::Float32, DeviceType::CPU),
-                &ElementWiseFolder<float, AddFunctor<float> >::instance(),
-            },
-            {
-                getFolderKey(OpType::Sub, DataType::Float32, DeviceType::CPU),
-                &ElementWiseFolder<float, SubFunctor<float> >::instance(),
-            },
-            {
-                getFolderKey(OpType::Mul, DataType::Float32, DeviceType::CPU),
-                &ElementWiseFolder<float, MulFunctor<float> >::instance(),
-            },
-            {
-                getFolderKey(OpType::Div, DataType::Float32, DeviceType::CPU),
-                &ElementWiseFolder<float, DivFunctor<float> >::instance(),
-            }
-        };
+        using OpFolderFactory = GenericFactory<FolderKey, OpFolder *>;
         const FolderKey key = getFolderKey(op);
-        const auto it = map.find(key);
-        if (it == map.end()) {
+        OpFolder *op_folder = OpFolderFactory::instance().get(key);
+        if (!op_folder) {
             std::cout << "Cant find folder" << std::endl;
             return false;
         }
-        (*it->second)(op);
+        (*op_folder)(op);
         return true;
     }
 }
