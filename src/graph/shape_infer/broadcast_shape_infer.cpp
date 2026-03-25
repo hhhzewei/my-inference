@@ -17,17 +17,15 @@ void BroadcastShapeInfer::operator()(OpNode *op) {
     std::vector expected_shape(numDim, TensorDim(1));
     for (int i = 0; i < numDim; ++i) {
         TensorDim expected_dim(1);
-        for (TensorNode *input: op->inputs()) {
+        for (const TensorNode *input: op->inputs()) {
             TensorDim dim(1);
             if (const int idx = input->numDim() - 1 - i; idx >= 0) {
                 dim = input->dim(idx);
             }
             // 校验
-            if (expected_dim.isClear()) {
-                if (dim.isClear() && expected_dim != dim) {
-                    std::cout << "Dim error";
-                    return;
-                }
+            if (expected_dim.isClear() && dim.isClear() && expected_dim != dim) {
+                std::cout << "Dim error";
+                return;
             }
             if (dim.isClear()) {
                 expected_dim = dim;
@@ -45,7 +43,7 @@ void BroadcastShapeInfer::operator()(OpNode *op) {
     for (const TensorNode *input: op->inputs()) {
         inputs_strides.emplace_back(broadcast_stride(input->shape(), expected_shape));
     }
-    op->setInputsStrides(inputs_strides);
+    op->setInputsStrides(std::move(inputs_strides));
     const std::vector<TensorDim> output_strides = default_stride(expected_shape);
     op->setOutputsStrides(std::vector(op->numOutput(), output_strides));
 }

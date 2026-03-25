@@ -2,26 +2,18 @@
 // Created by hzw on 2026/2/17.
 //
 #pragma once
-#include "kernel/kernel_key.h"
-#include "graph/node/op_node.h"
+#include <vector>
 
 namespace my_inference {
+    struct KernelContext {
+        std::vector<void *> inputs;
+        std::vector<void *> outputs;
+    };
+
     class OpKernel {
     public:
         virtual ~OpKernel() = default;
 
-        virtual void operator()(void *rt_ctx, void *static_attr) = 0;
+        virtual void operator()(const KernelContext &ctx) = 0;
     };
-
-    inline OpKernel *getOpKernel(const OpNode &op_node) {
-        static const std::unordered_map<KernelKey, OpKernel *> map = {};
-        const KernelKey key = getKernelKey(op_node);
-        const auto it = map.find(key);
-        if (it == map.end()) {
-            std::cout << "Cant find kernel";
-            return nullptr;
-        }
-        OpKernel *kernel = it->second;
-        return kernel;
-    }
 }

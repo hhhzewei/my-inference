@@ -29,16 +29,16 @@ namespace my_inference {
             op->output(0)->setData(c);
             // 调用原语
             if (shape.size() == 1) {
-                kernel::primitive::cpu::elementWiseWithStrides1D<T, Func>(
+                cpu::primitive::binaryElementWiseWithStrides1D<T, Func>(
                     a, a_strides.data(),
                     b, b_strides.data(),
                     c,
                     numElem);
             } else if (shape.size() == 2) {
-                kernel::primitive::cpu::elementWiseWithStrides2D<T, Func>(
+                cpu::primitive::binaryElementWiseWithStrides2D<T, Func>(
                     a, a_strides.data(),
                     b, b_strides.data(),
-                    c, shape.data(), c_strides.data());
+                    c, shape[0], shape[1]);
             }
         }
     };

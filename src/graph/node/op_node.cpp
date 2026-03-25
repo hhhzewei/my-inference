@@ -12,6 +12,13 @@ int my_inference::OpNode::numConsumer() const {
     return result;
 }
 
+my_inference::DataType my_inference::OpNode::dataType() const {
+    if (inputs_.empty()) {
+        return DataType::Unknown;
+    }
+    return inputs_[0]->dataType();
+}
+
 void my_inference::OpNode::initInput() {
     for (int i = 0; i < inputs_.size(); ++i) {
         inputs_[i]->addConsumer(this, i);

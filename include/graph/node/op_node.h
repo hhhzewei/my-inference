@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <optional>
+#include "graph/node/data_type.h"
 #include "graph/node/op_type.h"
 #include "graph/node/tensor_dim.h"
 #include "kernel/device.h"
@@ -94,20 +95,20 @@ namespace my_inference {
             outputs_[output_idx] = new_input;
         }
 
-        const std::vector<TensorDim> &inputStrides(int i) {
+        const std::vector<TensorDim> &inputStrides(const int i) const {
             return inputs_strides_[i];
         }
 
-        void setInputsStrides(const std::vector<std::vector<TensorDim> > &inputs_strides) {
-            inputs_strides_ = inputs_strides;
+        void setInputsStrides(std::vector<std::vector<TensorDim> > inputs_strides) {
+            inputs_strides_ = std::move(inputs_strides);
         }
 
-        const std::vector<TensorDim> &outputStrides(int i) {
+        const std::vector<TensorDim> &outputStrides(const int i) const {
             return outputs_strides_[i];
         }
 
-        void setOutputsStrides(const std::vector<std::vector<TensorDim> > &outputs_strides) {
-            outputs_strides_ = outputs_strides;
+        void setOutputsStrides(std::vector<std::vector<TensorDim> > outputs_strides) {
+            outputs_strides_ = std::move(outputs_strides);
         }
 
         [[nodiscard]] bool hasAttribute(const AttributeKey &attributeKey) const {
@@ -134,6 +135,8 @@ namespace my_inference {
         [[nodiscard]] const std::map<AttributeKey, AttributeValue> &attributeMap() const {
             return attributes_;
         }
+
+        [[nodiscard]] DataType dataType() const;
 
     private:
         void initInput();

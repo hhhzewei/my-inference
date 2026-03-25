@@ -163,11 +163,16 @@ namespace my_inference {
             memory_info_->updateEndTime(idx);
         }
 
-        void initMemSize() {
-            TensorDim size(getDataTypeSize(data_type_));
+        TensorDim numData() const {
+            TensorDim result(1);
             for (int i = static_cast<int>(shape_.size()) - 1; i >= 0; --i) {
-                size = size * shape_[i];
+                result = result * shape_[i];
             }
+            return result;
+        }
+
+        void initMemSize() {
+            TensorDim size = getDataTypeSize(data_type_) * numData();
             memory_info_ = std::make_shared<MemoryInfo>(size, getDataTypeAlignSize(data_type_));
         }
 
