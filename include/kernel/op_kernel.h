@@ -5,15 +5,21 @@
 #include <vector>
 
 namespace my_inference {
-    struct KernelContext {
-        std::vector<void *> inputs;
-        std::vector<void *> outputs;
+    struct KernelParam {
+        struct TensorDesc {
+            void *tensor;
+            int64_t *shape;
+            int64_t *strides;
+        };
+
+        std::vector<TensorDesc> inputs;
+        std::vector<TensorDesc> outputs;
     };
 
     class OpKernel {
     public:
         virtual ~OpKernel() = default;
 
-        virtual void operator()(const KernelContext &ctx) = 0;
+        virtual void operator()(const KernelParam &ctx) = 0;
     };
 }

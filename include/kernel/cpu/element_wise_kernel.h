@@ -16,10 +16,10 @@ namespace my_inference::cpu {
         explicit BinaryElementWiseKernel(const OpNode *op) : N(op->output(0)->numData().value()) {
         }
 
-        void operator()(const KernelContext &ctx) override {
+        void operator()(const KernelParam &param) override {
             primitive::binaryElementWise<T, Func>(
-                static_cast<T *>(ctx.inputs[0]), static_cast<T *>(ctx.inputs[1]),
-                static_cast<T *>(ctx.outputs[0]),
+                static_cast<T *>(param.inputs[0].tensor), static_cast<T *>(param.inputs[1].tensor),
+                static_cast<T *>(param.outputs[0].tensor),
                 N);
         }
 
@@ -33,11 +33,11 @@ namespace my_inference::cpu {
         explicit BinaryElementWiseWithStridesKernel1D(const OpNode *op) : N(op->output(0)->dim(0).value()) {
         }
 
-        void operator()(const KernelContext &ctx) override {
+        void operator()(const KernelParam &param) override {
             primitive::binaryElementWiseWithStrides1D<T, Func>(
-                static_cast<T *>(ctx.inputs[0]), static_cast<int64_t *>(ctx.inputs[1]),
-                static_cast<T *>(ctx.inputs[2]), static_cast<int64_t *>(ctx.inputs[3]),
-                static_cast<T *>(ctx.outputs[0]),
+                static_cast<T *>(param.inputs[0].tensor), param.inputs[0].strides,
+                static_cast<T *>(param.inputs[1].tensor), param.inputs[1].strides,
+                static_cast<T *>(param.outputs[0].tensor),
                 N);
         }
 
@@ -52,11 +52,11 @@ namespace my_inference::cpu {
                                                                           N(op->output(0)->dim(1).value()) {
         }
 
-        void operator()(const KernelContext &ctx) override {
+        void operator()(const KernelParam &param) override {
             primitive::binaryElementWiseWithStrides2D<T, Func>(
-                static_cast<T *>(ctx.inputs[0]), static_cast<int64_t *>(ctx.inputs[1]),
-                static_cast<T *>(ctx.inputs[2]), static_cast<int64_t *>(ctx.inputs[3]),
-                static_cast<T *>(ctx.outputs[0]),
+                static_cast<T *>(param.inputs[0].tensor), param.inputs[0].strides,
+                static_cast<T *>(param.inputs[1].tensor), param.inputs[1].strides,
+                static_cast<T *>(param.outputs[0].tensor),
                 M, N);
         }
 
@@ -72,12 +72,12 @@ namespace my_inference::cpu {
                                                                           num_dim(op->output(0)->numDim()) {
         }
 
-        void operator()(const KernelContext &ctx) override {
+        void operator()(const KernelParam &param) override {
             primitive::binaryElementWiseWithStridesND<T, Func>(
-                static_cast<T *>(ctx.inputs[0]), static_cast<int64_t *>(ctx.inputs[1]),
-                static_cast<T *>(ctx.inputs[2]), static_cast<int64_t *>(ctx.inputs[3]),
-                static_cast<T *>(ctx.outputs[0]), static_cast<int64_t *>(ctx.inputs[1]),
-                static_cast<int64_t *>(ctx.inputs[4]), num_data, num_dim);
+                static_cast<T *>(param.inputs[0].tensor), param.inputs[0].strides,
+                static_cast<T *>(param.inputs[1].tensor), param.inputs[1].strides,
+                static_cast<T *>(param.outputs[0].tensor), param.outputs[0].strides,
+                param.outputs[0].shape, num_data, num_dim);
         }
 
     private:
