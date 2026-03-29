@@ -17,14 +17,18 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 find_package(protobuf CONFIG REQUIRED)
 find_package(onnx CONFIG REQUIRED)
 
+
 add_library(my_inference STATIC src/graph/graph.cpp
         src/graph/node/tensor_node.cpp
         src/graph/node/op_node.cpp
+        # attribute propagate
+        src/graph/attribute_propagate/attr_propagate_util.cpp
         src/graph/attribute_propagate/conv_attr_propagator.cpp
         src/graph/attribute_propagate/gemm_attr_propagator.cpp
         # data type inference
         src/graph/date_type_infer/data_type_infer.cpp
         # shape inference
+        src/graph/shape_infer/shape_infer_util.cpp
         src/graph/shape_infer/identity_shape_infer.cpp
         src/graph/shape_infer/broadcast_shape_infer.cpp
         src/graph/shape_infer/conv_shape_infer.cpp
@@ -34,6 +38,8 @@ add_library(my_inference STATIC src/graph/graph.cpp
         src/optimize/dead_code_elimination.cpp
         # constant folding
         src/optimize/constant_folding.cpp
+        src/optimize/constant_folder/op_folder_util.cpp
+        src/optimize/constant_folder/element_wise_folder.cpp
         # cse
         src/optimize/common_subexpression_elimination.cpp
         # op fusion
@@ -42,9 +48,21 @@ add_library(my_inference STATIC src/graph/graph.cpp
         src/optimize/op_fusion/conv_batchnorm_fuser.cpp
         # memory planning
         src/memory/memory_planning.cpp
+        # kernel key
+        src/kernel/kernel_key_generator/kernel_key_util.cpp
+        src/kernel/kernel_key_generator/element_wise_kernel_key_generator.cpp
+        #kernel creator
+        src/kernel/kernel_util.cpp
+        src/kernel/kernel_creator/element_wise_kernel_creator.cpp
         # util
         src/util/util.cpp
         src/util/onnx_util.cpp
+)
+
+# 静态库中的注册声明对于main函数是死代码，会被链接器溢出，必须用以下链接选项避免注册失效
+target_link_options(my_inference INTERFACE
+        "$<DEVICE_LINK:/WHOLEARCHIVE:$<TARGET_FILE:my_inference>>"
+        "$<HOST_LINK:/WHOLEARCHIVE:$<TARGET_FILE:my_inference>>"
 )
 
 target_link_libraries(my_inference

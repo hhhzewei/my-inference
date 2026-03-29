@@ -5,8 +5,12 @@
 #include "graph/shape_infer/conv_shape_infer.h"
 #include "graph/node/attribute/attribute_key.h"
 #include "graph/node/tensor_node.h"
+#include "graph/shape_infer/shape_infer_util.h"
+using namespace my_inference;
 
-void my_inference::ConvShapeInfer::operator()(OpNode *op) {
+REGISTER_SHAPE_INFER(OpType::Conv, &ConvShapeInfer::instance());
+
+void ConvShapeInfer::operator()(OpNode *op) {
     auto &x_shape = op->input(0)->shape();
     auto &kernel_shape = op->input(1)->shape();
     const int image_num_dim = static_cast<int>(x_shape.size()) - 2;

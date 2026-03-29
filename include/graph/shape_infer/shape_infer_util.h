@@ -7,14 +7,9 @@
 #include "graph/shape_infer/shape_infer.h"
 #include "util/factory.h"
 
-namespace my_inference {
-#define REGISTER_SHAPE_INFER(op_type,shape_infer) GENERIC_REGISTER(OpType,ShapeInfer*,op_type,shape_infer)
+#define REGISTER_SHAPE_INFER(op_type,shape_infer) GENERIC_REGISTER(my_inference::OpType,my_inference::ShapeInfer*,op_type,shape_infer)
 
-    inline void inferShape(OpNode *op) {
-        using ShapeInferFactory = GenericFactory<OpType, ShapeInfer *>;
-        if (ShapeInfer *shape_infer = ShapeInferFactory::instance().get(op->type())) {
-            (*shape_infer)(op);
-        }
-    }
+namespace my_inference {
+    void inferShape(OpNode *op);
 }
 #endif //MY_INFERENCE_SHAPE_INFER_UTIL_H

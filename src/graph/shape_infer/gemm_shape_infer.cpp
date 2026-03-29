@@ -5,8 +5,12 @@
 #include "graph/shape_infer/gemm_shape_infer.h"
 #include "graph/node/tensor_node.h"
 #include "graph/node/attribute/attribute_key.h"
+#include "graph/shape_infer/shape_infer_util.h"
+using namespace my_inference;
 
-void my_inference::GemmShapeInfer::operator()(OpNode *op) {
+REGISTER_SHAPE_INFER(OpType::Gemm, &GemmShapeInfer::instance());
+
+void GemmShapeInfer::operator()(OpNode *op) {
     const bool transA = op->attribute<int64_t>(AttributeKey::TransA).value();
     const bool transB = op->attribute<int64_t>(AttributeKey::TransB).value();
     const auto &a_shape = op->input(0)->shape();

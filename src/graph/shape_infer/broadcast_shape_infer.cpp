@@ -3,9 +3,28 @@
 //
 #include "graph/shape_infer/broadcast_shape_infer.h"
 #include "graph/node/tensor_node.h"
+#include "graph/shape_infer/shape_infer_util.h"
 #include "graph/shape_infer/stride.h"
 
 using namespace my_inference;
+// two math
+REGISTER_SHAPE_INFER(OpType::Add, &BroadcastShapeInfer::instance());
+REGISTER_SHAPE_INFER(OpType::Sub, &BroadcastShapeInfer::instance());
+REGISTER_SHAPE_INFER(OpType::Mul, &BroadcastShapeInfer::instance());
+REGISTER_SHAPE_INFER(OpType::Div, &BroadcastShapeInfer::instance());
+REGISTER_SHAPE_INFER(OpType::Pow, &BroadcastShapeInfer::instance());
+
+// logic
+REGISTER_SHAPE_INFER(OpType::Less, &BroadcastShapeInfer::instance());
+REGISTER_SHAPE_INFER(OpType::Greater, &BroadcastShapeInfer::instance());
+REGISTER_SHAPE_INFER(OpType::Equal, &BroadcastShapeInfer::instance());
+REGISTER_SHAPE_INFER(OpType::NotEqual, &BroadcastShapeInfer::instance());
+REGISTER_SHAPE_INFER(OpType::And, &BroadcastShapeInfer::instance());
+REGISTER_SHAPE_INFER(OpType::Or, &BroadcastShapeInfer::instance());
+REGISTER_SHAPE_INFER(OpType::Xor, &BroadcastShapeInfer::instance());
+REGISTER_SHAPE_INFER(OpType::Max, &BroadcastShapeInfer::instance());
+REGISTER_SHAPE_INFER(OpType::Min, &BroadcastShapeInfer::instance());
+REGISTER_SHAPE_INFER(OpType::Where, &BroadcastShapeInfer::instance());
 
 void BroadcastShapeInfer::operator()(OpNode *op) {
     int numDim = 0;

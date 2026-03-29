@@ -6,7 +6,7 @@
 #define MY_INFERENCE_FACTORY_H
 #include <map>
 
-#include "util/Singleton.h"
+#include "util/singleton.h"
 
 namespace my_inference {
     template<typename Key, typename Value>
@@ -39,7 +39,7 @@ namespace my_inference {
 #define MY_CONCAT_IMPL(s1,s2) s1##s2
     //必须要中转宏
 #define MY_CONCAT(s1,s2) MY_CONCAT_IMPL(s1,s2)
-#define GENERIC_REGISTER(KeyType,ValueType,key,value) inline typename GenericFactory<KeyType,ValueType>::Registrar MY_CONCAT(_INTERNAL_REG_,__COUNTER__){key,value}
+#define GENERIC_REGISTER(KeyType,ValueType,key,value) static my_inference::GenericFactory<KeyType,ValueType>::Registrar MY_CONCAT(_INTERNAL_REG_,__COUNTER__){key,value}
 }
 
 #endif //MY_INFERENCE_FACTORY_H

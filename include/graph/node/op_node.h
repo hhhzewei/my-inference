@@ -113,7 +113,7 @@ namespace my_inference {
 
         [[nodiscard]] bool hasAttribute(const AttributeKey &attributeKey) const {
             const auto it = attributes_.find(attributeKey);
-            return it == attributes_.end();
+            return it != attributes_.end();
         }
 
         template<typename T>

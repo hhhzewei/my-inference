@@ -5,7 +5,7 @@
 #ifndef MY_INFERENCE_CONSTANT_FOLDING_H
 #define MY_INFERENCE_CONSTANT_FOLDING_H
 #include "optimizer.h"
-#include "util/Singleton.h"
+#include "util/singleton.h"
 
 namespace my_inference {
     class ConstantFolding : public Optimizer, public Singleton<ConstantFolding> {

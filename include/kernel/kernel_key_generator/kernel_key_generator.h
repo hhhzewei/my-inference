@@ -3,9 +3,7 @@
 //
 #pragma once
 
-#include "graph/node/data_type.h"
 #include "graph/node/op_node.h"
-#include "util/factory.h"
 
 namespace my_inference {
     using KernelKey = uint64_t;
@@ -46,16 +44,4 @@ namespace my_inference {
                    static_cast<KernelKey>(data_type) << DATA_TYPE_BIT_OFFSET;
         }
     };
-
-#define REGISTER_KERNEL_KEY_GENERATOR(op_type,kernel_key_generator) GENERIC_REGISTER(OpType,KernelKeyGenerator *,op_type,kernel_key_generator);
-
-    inline KernelKey getKernelKey(const OpNode *op) {
-        using KernelKeyGeneratorFactory = GenericFactory<OpType, KernelKeyGenerator *>;
-        const KernelKeyGenerator *kernel_key_generator = KernelKeyGeneratorFactory::instance().get(op.type());
-        if (kernel_key_generator == nullptr) {
-            std::cout << "Cant find OpKeyGenerator";
-            return 0;
-        }
-        return (*kernel_key_generator)(op);
-    }
 }

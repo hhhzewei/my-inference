@@ -5,7 +5,7 @@
 #ifndef MY_INFERENCE_CONV_BATCHNORM_FUSER_H
 #define MY_INFERENCE_CONV_BATCHNORM_FUSER_H
 #include "optimize/op_fusion/op_fusion_pattern.h"
-#include "util/Singleton.h"
+#include "util/singleton.h"
 
 namespace my_inference {
     class ConvBatchNormFuser : public OpFuser, public Singleton<ConvBatchNormFuser> {

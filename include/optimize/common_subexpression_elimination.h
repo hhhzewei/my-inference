@@ -5,7 +5,7 @@
 #ifndef MY_INFERENCE_COMMON_SUBEXPRESSION_ELIMINATION_H
 #define MY_INFERENCE_COMMON_SUBEXPRESSION_ELIMINATION_H
 #include "optimize/optimizer.h"
-#include "util/Singleton.h"
+#include "util/singleton.h"
 
 namespace my_inference {
     class CommonSubexpressionElimination : public Optimizer,public Singleton<CommonSubexpressionElimination> {

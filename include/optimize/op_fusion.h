@@ -7,7 +7,7 @@
 #include "optimize/optimizer.h"
 #include "optimize/op_fusion/conv_batchnorm_fuser.h"
 #include "optimize/op_fusion/op_fusion_pattern.h"
-#include "util/Singleton.h"
+#include "util/singleton.h"
 
 namespace my_inference {
     class OpFusion : public Optimizer, public Singleton<OpFusion> {

@@ -5,7 +5,7 @@
 #ifndef MY_INFERENCE_DEAD_CODE_ELIMINATION_H
 #define MY_INFERENCE_DEAD_CODE_ELIMINATION_H
 #include "optimize/optimizer.h"
-#include "util/Singleton.h"
+#include "util/singleton.h"
 
 namespace my_inference {
     class DeadCodeElimination : public Optimizer, public Singleton<DeadCodeElimination> {
