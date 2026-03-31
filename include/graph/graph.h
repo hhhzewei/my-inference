@@ -217,7 +217,9 @@ namespace my_inference {
 
         void topoSort();
 
-        void planMemory();
+        void planTensorMemory();
+
+        void planMetaMemory();
 
         [[nodiscard]] std::map<OpNode::Id, size_t> opInDegrees() const;
 
@@ -242,6 +244,8 @@ namespace my_inference {
         std::map<OpId, std::unique_ptr<OpNode> > op_repository_;
         std::map<TensorId, std::unique_ptr<TensorNode> > tensor_repository_;
         std::vector<OpNode *> topo_ops_;
+        uint64_t tensor_memory_size_ = 0;
+        uint64_t meta_memory_size_ = 0;
     };
 }
 #endif //MY_INFERENCE_GRAPH_H

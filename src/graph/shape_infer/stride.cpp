@@ -5,9 +5,32 @@
 
 #include <iostream>
 
+#include "graph/node/tensor_node.h"
+
 using namespace my_inference;
 
-std::vector<TensorDim> my_inference::default_stride(const std::vector<TensorDim> &shape) {
+void my_inference::initStrides(OpNode *op) {
+    // input strides
+    std::vector<std::vector<TensorDim> > inputs_strides;
+    inputs_strides.reserve(op->numInput());
+    for (const auto input: op->inputs()) {
+        if (isElementWise(op->type())) {
+            inputs_strides.emplace_back(broadcastStride(input->shape(), op->output(0)->shape()));
+        } else {
+            inputs_strides.emplace_back(defaultStride(input->shape()));
+        }
+    }
+    op->setInputsStrides(std::move(inputs_strides));
+    // output strides
+    std::vector<std::vector<TensorDim> > outputs_strides;
+    outputs_strides.reserve(op->numOutput());
+    for (const auto output: op->outputs()) {
+        outputs_strides.emplace_back(defaultStride(output->shape()));
+    }
+    op->setOutputsStrides(std::move(outputs_strides));
+}
+
+std::vector<TensorDim> my_inference::defaultStride(const std::vector<TensorDim> &shape) {
     const int numDim = static_cast<int>(shape.size());
     std::vector strides(shape.size(), TensorDim(1));
     for (int i = numDim - 2; i >= 0; --i) {
@@ -16,8 +39,8 @@ std::vector<TensorDim> my_inference::default_stride(const std::vector<TensorDim>
     return strides;
 }
 
-std::vector<TensorDim> my_inference::broadcast_stride(const std::vector<TensorDim> &shape,
-                                                      const std::vector<TensorDim> &expected_shape) {
+std::vector<TensorDim> my_inference::broadcastStride(const std::vector<TensorDim> &shape,
+                                                     const std::vector<TensorDim> &expected_shape) {
     const int numDim = static_cast<int>(expected_shape.size());
     std::vector<std::vector<TensorDim> > inputs_strides;
     std::vector strides(numDim, TensorDim(0));

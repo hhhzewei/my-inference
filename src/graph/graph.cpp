@@ -7,6 +7,7 @@
 #include "graph/attribute_propagate/attr_propagate_util.h"
 #include "graph/data_type_infer/data_type_infer.h"
 #include "graph/shape_infer/shape_infer_util.h"
+#include "graph/shape_infer/stride.h"
 #include "memory/memory_planning.h"
 #include "optimize/optimizer_util.h"
 #include "util/onnx_util.h"
@@ -27,12 +28,16 @@ void Graph::optimize() {
 
 void Graph::prepare() {
     topoSort();
-    planMemory();
+    planTensorMemory();
+    planMetaMemory();
 }
 
 void Graph::init(const std::string &onnx_path) {
     loadOnnx(onnx_path);
     inferDataTypeAndShape();
+    for (const auto &[id,tensor]: tensor_repository_) {
+        tensor->initMemSize();
+    }
 }
 
 void Graph::loadOnnx(const std::string &onnx_path) {
@@ -148,9 +153,7 @@ void Graph::inferDataTypeAndShape() const {
     auto op_func = [&](OpNode *op) {
         inferDataType(op);
         inferShape(op);
-        for (const auto output: op->outputs()) {
-            output->initMemSize();
-        }
+        initStrides(op);
     };
     forwardTopoTraverse(op_func);
 }
@@ -177,34 +180,35 @@ std::map<OpNode::Id, size_t> Graph::opOutDegrees() const {
 
 void Graph::topoSort() {
     topo_ops_.reserve(op_repository_.size());
-    int idx = 0;
+    int topoIdx = 0;
     auto op_func = [&](OpNode *op) {
         if (op->type() == OpType::Constant) {
             return;
         }
         topo_ops_.emplace_back(op);
         for (const auto input: op->inputs()) {
-            input->updateEndTime(idx);
+            input->updateEndTime(topoIdx);
         }
         for (const auto output: op->outputs()) {
-            output->updateStartTime(idx);
+            output->updateStartTime(topoIdx);
         }
-        ++idx;
+        ++topoIdx;
     };
     forwardTopoTraverse(op_func);
     for (const auto constant: constant_nodes_) {
         for (const auto output: constant->outputs()) {
             output->updateStartTime(0);
-            output->updateEndTime(idx);
+            output->updateEndTime(topoIdx);
         }
     }
 }
 
-void Graph::planMemory() {
+void Graph::planTensorMemory() {
     std::set<MemoryInfo *> unique_set;
     std::vector<MemoryInfo *> memory_infos;
     memory_infos.reserve(tensor_repository_.size());
     int64_t max_memory = 0;
+    // collect unique memory info
     for (auto &[id,tensor]: tensor_repository_) {
         MemoryInfo *memory_info = tensor->memoryInfo().get();
         if (unique_set.count(memory_info) == 1) {
@@ -215,9 +219,37 @@ void Graph::planMemory() {
         max_memory += memory_info->size().value();
     }
     const int64_t res = planMemoryOffset(std::move(memory_infos));
+    tensor_memory_size_ = res;
     std::cout << "expected: " << max_memory << "B, plan: " << res << "B, saved " << 100 - static_cast<double>(res) *
             100.0 / static_cast<double>(max_memory)
             << "%" << std::endl;
+}
+
+void Graph::planMetaMemory() {
+    uint64_t offset = 0;
+    for (auto &[id,op]: op_repository_) {
+        if (const auto op_type = op->type(); op_type == OpType::Constant || op_type == OpType::Source || op_type ==
+                                             OpType::Sink) {
+            continue;
+        }
+        std::vector<uint64_t> inputs_strides_offset;
+        inputs_strides_offset.reserve(op->numInput());
+        for (auto &strides: op->inputsStrides()) {
+            inputs_strides_offset.emplace_back(offset);
+            const uint64_t strides_size = strides.size() * sizeof(int64_t);
+            offset += strides_size;
+        }
+        std::vector<uint64_t> outputs_strides_offset;
+        outputs_strides_offset.reserve(op->numOutput());
+        for (auto &strides: op->outputsStrides()) {
+            outputs_strides_offset.emplace_back(offset);
+            const uint64_t strides_size = strides.size() * sizeof(int64_t);
+            offset += strides_size;
+        }
+        op->setStridesOffset(std::move(inputs_strides_offset), std::move(outputs_strides_offset));
+    }
+    meta_memory_size_ = offset;
+    std::cout << "Meta memory size: " << offset << "B" << std::endl;
 }
 
 
@@ -237,6 +269,9 @@ OpNode *Graph::createOp(OpType type, std::vector<TensorNode *> inputs, std::vect
     const auto &op = it->second.get();
     if (op->type() == OpType::Constant) {
         constant_nodes_.emplace_back(op);
+    }
+    else {
+        initStrides(op);
     }
     return op;
 }

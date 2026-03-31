@@ -135,6 +135,43 @@ namespace my_inference {
             default: return false;
         }
     }
+
+    inline bool isElementWise(const OpType &opType) {
+        switch (opType) {
+            // --- 1. 算术运算 (Arithmetic) ---
+            case OpType::Add:
+            case OpType::Sub:
+            case OpType::Mul:
+            case OpType::Div:
+            case OpType::Pow:
+            case OpType::Neg:
+            case OpType::Abs:
+            case OpType::Sqrt:
+            case OpType::Max: // 注意：这些在多输入时是逐元素比较
+            case OpType::Min:
+            // --- 2. 逻辑/比较运算 (Logical/Comparison) ---
+            case OpType::And:
+            case OpType::Or:
+            case OpType::Xor:
+            case OpType::Not:
+            case OpType::Equal:
+            case OpType::Greater:
+            case OpType::Less:
+            // --- 3. 激活函数/非线性变换 (Activation/Non-linear) ---
+            case OpType::Relu:
+            case OpType::LeakyRelu:
+            case OpType::Sigmoid:
+            case OpType::Tanh:
+            case OpType::Exp:
+            case OpType::Log:
+            // --- 4. 裁剪与约束 (Clipping/Constraint) ---
+            case OpType::Clip:
+            // --- 5. 选择逻辑 (Conditional) ---
+            case OpType::Where:
+                return true;
+            default: return false;
+        }
+    }
 }
 
 #endif //MY_INFERENCE_OP_TYPE_H

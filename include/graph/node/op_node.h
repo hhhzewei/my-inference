@@ -95,16 +95,24 @@ namespace my_inference {
             outputs_[output_idx] = new_input;
         }
 
-        const std::vector<TensorDim> &inputStrides(const int i) const {
+        [[nodiscard]] const std::vector<TensorDim> &inputStrides(const int i) const {
             return inputs_strides_[i];
+        }
+
+        [[nodiscard]] const std::vector<std::vector<TensorDim> > &inputsStrides() const {
+            return inputs_strides_;
         }
 
         void setInputsStrides(std::vector<std::vector<TensorDim> > inputs_strides) {
             inputs_strides_ = std::move(inputs_strides);
         }
 
-        const std::vector<TensorDim> &outputStrides(const int i) const {
+        [[nodiscard]] const std::vector<TensorDim> &outputStrides(const int i) const {
             return outputs_strides_[i];
+        }
+
+        [[nodiscard]] const std::vector<std::vector<TensorDim> > &outputsStrides() const {
+            return outputs_strides_;
         }
 
         void setOutputsStrides(std::vector<std::vector<TensorDim> > outputs_strides) {
@@ -138,6 +146,12 @@ namespace my_inference {
 
         [[nodiscard]] DataType dataType() const;
 
+        void setStridesOffset(std::vector<uint64_t> inputs_strides_offset,
+                                    std::vector<uint64_t> outputs_strides_offset) {
+            inputs_strides_offset_ = std::move(inputs_strides_offset);
+            outputs_strides_offset_ = std::move(outputs_strides_offset);
+        }
+
     private:
         void initInput();
 
@@ -146,8 +160,10 @@ namespace my_inference {
         OpType type_;
         std::vector<TensorNode *> inputs_;
         std::vector<std::vector<TensorDim> > inputs_strides_;
+        std::vector<uint64_t> inputs_strides_offset_;
         std::vector<TensorNode *> outputs_;
         std::vector<std::vector<TensorDim> > outputs_strides_;
+        std::vector<uint64_t> outputs_strides_offset_;
         std::map<AttributeKey, AttributeValue> attributes_;
         Device device_ = {DeviceType::CPU, 0};
     };

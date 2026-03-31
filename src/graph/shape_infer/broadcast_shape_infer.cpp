@@ -56,13 +56,4 @@ void BroadcastShapeInfer::operator()(OpNode *op) {
     for (TensorNode *output: op->outputs()) {
         output->setShape(expected_shape);
     }
-    // 生成strides
-    std::vector<std::vector<TensorDim> > inputs_strides;
-    inputs_strides.reserve(op->numInput());
-    for (const TensorNode *input: op->inputs()) {
-        inputs_strides.emplace_back(broadcast_stride(input->shape(), expected_shape));
-    }
-    op->setInputsStrides(std::move(inputs_strides));
-    const std::vector<TensorDim> output_strides = default_stride(expected_shape);
-    op->setOutputsStrides(std::vector(op->numOutput(), output_strides));
 }
