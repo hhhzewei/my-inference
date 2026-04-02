@@ -6,14 +6,14 @@
 #include <algorithm>
 #include <set>
 
-int64_t my_inference::planMemoryOffset(std::vector<MemoryInfo *> memory_infos) {
-    std::sort(memory_infos.begin(), memory_infos.end(), [](const MemoryInfo *m1, const MemoryInfo *m2) {
+int64_t my_inference::planMemoryOffset(std::vector<TensorMemoryInfo *> memory_infos) {
+    std::sort(memory_infos.begin(), memory_infos.end(), [](const TensorMemoryInfo *m1, const TensorMemoryInfo *m2) {
         return m1->size().value() > m2->size().value();
     });
-    auto cmpFunc = [](const MemoryInfo *m1, const MemoryInfo *m2) { return m1->offset() < m2->offset(); };
-    std::set<MemoryInfo *, decltype(cmpFunc)> set(cmpFunc);
+    auto cmpFunc = [](const TensorMemoryInfo *m1, const TensorMemoryInfo *m2) { return m1->offset() < m2->offset(); };
+    std::set<TensorMemoryInfo *, decltype(cmpFunc)> set(cmpFunc);
     int64_t res = 0;
-    for (MemoryInfo *m: memory_infos) {
+    for (TensorMemoryInfo *m: memory_infos) {
         int64_t offset = 0;
         const int64_t size = m->size_value();
         for (auto it = set.begin(); it != set.end(); ++it) {

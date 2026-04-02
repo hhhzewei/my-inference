@@ -9,7 +9,7 @@
 #include "graph/node/data_type.h"
 #include "graph/node/op_type.h"
 #include "graph/node/tensor_dim.h"
-#include "kernel/device.h"
+#include "device/device.h"
 #include "graph/node/attribute/attribute_key.h"
 #include "graph/node/attribute/attribute_value.h"
 
@@ -39,6 +39,10 @@ namespace my_inference {
             inputs_ = std::move(inputs);
             outputs_ = std::move(outputs);
             initInput();
+        }
+
+        const std::string &name() const {
+            return name_;
         }
 
         [[nodiscard]] Id id() const {
@@ -147,7 +151,7 @@ namespace my_inference {
         [[nodiscard]] DataType dataType() const;
 
         void setStridesOffset(std::vector<uint64_t> inputs_strides_offset,
-                                    std::vector<uint64_t> outputs_strides_offset) {
+                              std::vector<uint64_t> outputs_strides_offset) {
             inputs_strides_offset_ = std::move(inputs_strides_offset);
             outputs_strides_offset_ = std::move(outputs_strides_offset);
         }

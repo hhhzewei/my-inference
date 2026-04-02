@@ -5,14 +5,14 @@
 #ifndef MY_INFERENCE_SINGLETON_H
 #define MY_INFERENCE_SINGLETON_H
 
-namespace my_inference {
 #define DECLARE_SINGLETON(Type) \
 private: \
-friend class Singleton<Type>; \
+friend class my_inference::Singleton<Type>; \
 Type() = default; \
 Type(const Type&) = delete; \
 Type& operator=(const Type&) = delete;
 
+namespace my_inference {
     template<typename T>
     class Singleton {
     public:

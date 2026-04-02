@@ -13,7 +13,7 @@ REGISTER_KERNEL_KEY_GENERATOR(OpType::Div, &ElementWiseKeyGenerator::instance())
 
 KernelKey ElementWiseKeyGenerator::generate(const OpType &op_type, const DeviceType &device_type,
     const DataType &data_type, const bool isBroadcast) {
-    return baseKey(op_type, device_type, data_type) || reservedKey(isBroadcast);
+    return baseKey(op_type, device_type, data_type) | reservedKey(isBroadcast);
 }
 
 KernelKey ElementWiseKeyGenerator::reservedKey(const bool isBroadcast) {

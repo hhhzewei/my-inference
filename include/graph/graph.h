@@ -11,6 +11,8 @@
 #include "graph/node/op_node.h"
 #include "graph/node/tensor_node.h"
 #include "graph/node/tensor_type.h"
+#include "kernel/op_kernel.h"
+#include "memory/memory_allocator/memory_allocator.h"
 #include "util/id_generator.h"
 
 namespace my_inference {
@@ -39,6 +41,12 @@ namespace my_inference {
         void optimize();
 
         void prepare();
+
+        void preRun();
+
+        bool run(const std::vector<void *> &inputs);
+
+        void postRun() const;
 
         void replaceProducer(TensorNode *tensor, OpNode *new_producer, const int new_output_idx) const {
             tensor->producer()->replaceOutput(new_output_idx, emptyTensor());
@@ -229,6 +237,7 @@ namespace my_inference {
             return empty_tensor_.get();
         }
 
+        Device device_{DeviceType::CPU, 0};
         constexpr static TensorId EMPTY_TENSOR_ID = 0;
         std::unique_ptr<TensorNode> empty_tensor_ = std::make_unique<TensorNode>(
             EMPTY_TENSOR_ID, "__EMPTY_TENSOR__", nullptr, 0);
@@ -243,9 +252,15 @@ namespace my_inference {
         std::vector<OpNode *> constant_nodes_;
         std::map<OpId, std::unique_ptr<OpNode> > op_repository_;
         std::map<TensorId, std::unique_ptr<TensorNode> > tensor_repository_;
-        std::vector<OpNode *> topo_ops_;
+        // prepare
+        std::vector<OpNode *> topo_op_sequence_;
         uint64_t tensor_memory_size_ = 0;
         uint64_t meta_memory_size_ = 0;
+        // run
+        std::unique_ptr<MemoryAllocator> memory_allocator_;
+        uint8_t *tensor_memory_pointer_ = nullptr;
+        uint8_t *meta_memory_pointer_ = nullptr;
+        std::vector<std::pair<std::unique_ptr<OpKernel>, KernelParam> > kernel_sequence_;
     };
 }
 #endif //MY_INFERENCE_GRAPH_H

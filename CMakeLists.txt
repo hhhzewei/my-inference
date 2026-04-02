@@ -25,6 +25,7 @@ add_library(my_inference STATIC src/graph/graph.cpp
         src/graph/attribute_propagate/attr_propagate_util.cpp
         src/graph/attribute_propagate/conv_attr_propagator.cpp
         src/graph/attribute_propagate/gemm_attr_propagator.cpp
+        src/graph/attribute_propagate/batch_norm_attr_propagator.cpp
         # data type inference
         src/graph/date_type_infer/data_type_infer.cpp
         # shape inference
@@ -51,9 +52,14 @@ add_library(my_inference STATIC src/graph/graph.cpp
         # kernel key
         src/kernel/kernel_key_generator/kernel_key_util.cpp
         src/kernel/kernel_key_generator/element_wise_kernel_key_generator.cpp
+        src/kernel/kernel_key_generator/batch_norm_kernel_key_generator.cpp
         #kernel creator
         src/kernel/kernel_util.cpp
         src/kernel/kernel_creator/element_wise_kernel_creator.cpp
+        src/kernel/kernel_creator/batch_norm_creator.cpp
+        #memory allocator
+        src/memory/memory_allocator/memory_allocator_util.cpp
+        src/memory/memory_allocator/cpu_memory_allocator.cpp
         # util
         src/util/util.cpp
         src/util/onnx_util.cpp

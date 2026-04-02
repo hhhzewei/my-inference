@@ -10,6 +10,6 @@
 #include "kernel/op_kernel.h"
 
 namespace my_inference {
-    std::unique_ptr<OpKernel> getOpKernel(OpNode *op_node);
+    std::unique_ptr<OpKernel> getOpKernel(OpNode *op);
 }
 #endif //MY_INFERENCE_KERNEL_UTIL_H

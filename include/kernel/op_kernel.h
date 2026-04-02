@@ -7,6 +7,10 @@
 namespace my_inference {
     struct KernelParam {
         struct TensorDesc {
+            TensorDesc(void *tensor, int64_t *shape, int64_t *strides) : tensor(tensor), shape(shape),
+                                                                         strides(strides) {
+            }
+
             void *tensor;
             int64_t *shape;
             int64_t *strides;

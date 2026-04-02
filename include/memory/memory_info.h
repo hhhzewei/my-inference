@@ -9,9 +9,9 @@
 #include "graph/node/tensor_dim.h"
 
 namespace my_inference {
-    class MemoryInfo {
+    class TensorMemoryInfo {
     public:
-        MemoryInfo(TensorDim size, const int align_size) : size_(std::move(size)), align_size_(align_size) {
+        TensorMemoryInfo(TensorDim size, const int align_size) : size_(std::move(size)), align_size_(align_size) {
         }
 
         [[nodiscard]] int startTime() const {

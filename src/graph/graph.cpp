@@ -8,7 +8,10 @@
 #include "graph/data_type_infer/data_type_infer.h"
 #include "graph/shape_infer/shape_infer_util.h"
 #include "graph/shape_infer/stride.h"
+#include "kernel/kernel_util.h"
 #include "memory/memory_planning.h"
+#include "memory/memory_allocator/memory_allocator.h"
+#include "memory/memory_allocator/memory_allocator_util.h"
 #include "optimize/optimizer_util.h"
 #include "util/onnx_util.h"
 
@@ -30,6 +33,63 @@ void Graph::prepare() {
     topoSort();
     planTensorMemory();
     planMetaMemory();
+}
+
+void Graph::preRun() {
+    memory_allocator_ = getMemoryAllocator(device_);
+    // allocate memory
+    tensor_memory_pointer_ = static_cast<uint8_t *>(memory_allocator_->allocate(tensor_memory_size_));
+    meta_memory_pointer_ = static_cast<uint8_t *>(memory_allocator_->allocate(meta_memory_size_));
+    kernel_sequence_.reserve(topo_op_sequence_.size());
+    // kernel sequence
+    for (const auto op: topo_op_sequence_) {
+        if (const OpType op_type = op->type(); op_type == OpType::Source || op_type == OpType::Sink) {
+            continue;
+        }
+        KernelParam kernel_param;
+        kernel_param.inputs.reserve(op->numInput());
+        kernel_param.outputs.reserve(op->numOutput());
+        for (const auto input: op->inputs()) {
+            kernel_param.inputs.emplace_back(
+                tensor_memory_pointer_ + input->memoryInfo()->offset(),
+                reinterpret_cast<int64_t *>(meta_memory_pointer_ + input->memoryInfo()->offset()),
+                reinterpret_cast<int64_t *>(meta_memory_pointer_ + input->memoryInfo()->offset())
+            );
+        }
+        for (const auto output: op->outputs()) {
+            kernel_param.outputs.emplace_back(
+                tensor_memory_pointer_ + output->memoryInfo()->offset(),
+                reinterpret_cast<int64_t *>(meta_memory_pointer_ + output->memoryInfo()->offset()),
+                reinterpret_cast<int64_t *>(meta_memory_pointer_ + output->memoryInfo()->offset())
+            );
+        }
+        kernel_sequence_.emplace_back(getOpKernel(op), std::move(kernel_param));
+    }
+    // prepare constant
+    for (auto constant: constant_nodes_) {
+        const TensorNode *constant_tensor = constant->output(0);
+        auto &memory_info = constant_tensor->memoryInfo();
+        memory_allocator_->memCpy(memory_info->offset() + tensor_memory_pointer_, constant_tensor->data(),
+                                  memory_info->size_value());
+    }
+}
+
+bool Graph::run(const std::vector<void *> &inputs) {
+    assert(inputs.size()==sourceOp_->numOutput());
+    for (int i = 0; i < sourceOp_->numOutput(); ++i) {
+        auto &memory_info = sourceOp_->output(i)->memoryInfo();
+        memory_allocator_->memCpy(memory_info->offset() + tensor_memory_pointer_, inputs[i],
+                                  memory_info->size_value());
+    }
+    for (auto &[kernel,param]: kernel_sequence_) {
+        (*kernel)(param);
+    }
+    return true;
+}
+
+void Graph::postRun() const {
+    memory_allocator_->deallocate(tensor_memory_pointer_);
+    memory_allocator_->deallocate(meta_memory_pointer_);
 }
 
 void Graph::init(const std::string &onnx_path) {
@@ -179,13 +239,14 @@ std::map<OpNode::Id, size_t> Graph::opOutDegrees() const {
 }
 
 void Graph::topoSort() {
-    topo_ops_.reserve(op_repository_.size());
+    topo_op_sequence_.reserve(op_repository_.size());
     int topoIdx = 0;
     auto op_func = [&](OpNode *op) {
         if (op->type() == OpType::Constant) {
+            // 常量节点不参与拓扑排序
             return;
         }
-        topo_ops_.emplace_back(op);
+        topo_op_sequence_.emplace_back(op);
         for (const auto input: op->inputs()) {
             input->updateEndTime(topoIdx);
         }
@@ -204,19 +265,19 @@ void Graph::topoSort() {
 }
 
 void Graph::planTensorMemory() {
-    std::set<MemoryInfo *> unique_set;
-    std::vector<MemoryInfo *> memory_infos;
+    std::set<TensorMemoryInfo *> unique_set;
+    std::vector<TensorMemoryInfo *> memory_infos;
     memory_infos.reserve(tensor_repository_.size());
     int64_t max_memory = 0;
     // collect unique memory info
     for (auto &[id,tensor]: tensor_repository_) {
-        MemoryInfo *memory_info = tensor->memoryInfo().get();
+        TensorMemoryInfo *memory_info = tensor->memoryInfo().get();
         if (unique_set.count(memory_info) == 1) {
             continue;
         }
         unique_set.emplace(memory_info);
         memory_infos.emplace_back(memory_info);
-        max_memory += memory_info->size().value();
+        max_memory += memory_info->size_value();
     }
     const int64_t res = planMemoryOffset(std::move(memory_infos));
     tensor_memory_size_ = res;
@@ -228,8 +289,7 @@ void Graph::planTensorMemory() {
 void Graph::planMetaMemory() {
     uint64_t offset = 0;
     for (auto &[id,op]: op_repository_) {
-        if (const auto op_type = op->type(); op_type == OpType::Constant || op_type == OpType::Source || op_type ==
-                                             OpType::Sink) {
+        if (const auto op_type = op->type(); isVirtual(op_type)) {
             continue;
         }
         std::vector<uint64_t> inputs_strides_offset;
@@ -269,8 +329,7 @@ OpNode *Graph::createOp(OpType type, std::vector<TensorNode *> inputs, std::vect
     const auto &op = it->second.get();
     if (op->type() == OpType::Constant) {
         constant_nodes_.emplace_back(op);
-    }
-    else {
+    } else {
         initStrides(op);
     }
     return op;

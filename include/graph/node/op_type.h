@@ -41,7 +41,7 @@ namespace my_inference {
         Constant, Identity
     };
 
-    inline OpType getOpType(const std::string &onnxOpType) {
+    inline OpType getOpType(const std::string &onnx_op_type) {
         static const std::unordered_map<std::string, OpType> opMap{
             // 数学基础
             {"Add", OpType::Add}, {"Sub", OpType::Sub}, {"Mul", OpType::Mul}, {"Div", OpType::Div},
@@ -89,12 +89,12 @@ namespace my_inference {
             // 辅助
             {"Constant", OpType::Constant}, {"Identity", OpType::Identity}
         };
-        const auto it = opMap.find(onnxOpType);
+        const auto it = opMap.find(onnx_op_type);
         return it == opMap.end() ? OpType::Unknown : it->second;
     }
 
-    inline bool isInputCommutative(const OpType &opType) {
-        switch (opType) {
+    inline bool isInputCommutative(const OpType &op_type) {
+        switch (op_type) {
             case OpType::Add:
             case OpType::Mul:
             case OpType::And:
@@ -108,8 +108,8 @@ namespace my_inference {
         }
     }
 
-    inline bool isBoolOutput(const OpType &opType) {
-        switch (opType) {
+    inline bool isBoolOutput(const OpType &op_type) {
+        switch (op_type) {
             case OpType::Less:
             case OpType::Greater:
             case OpType::Equal:
@@ -136,8 +136,8 @@ namespace my_inference {
         }
     }
 
-    inline bool isElementWise(const OpType &opType) {
-        switch (opType) {
+    inline bool isElementWise(const OpType &op_type) {
+        switch (op_type) {
             // --- 1. 算术运算 (Arithmetic) ---
             case OpType::Add:
             case OpType::Sub:
@@ -171,6 +171,10 @@ namespace my_inference {
                 return true;
             default: return false;
         }
+    }
+
+    inline bool isVirtual(const OpType &op_type) {
+        return op_type == OpType::Source || op_type == OpType::Sink || op_type == OpType::Constant;
     }
 }
 

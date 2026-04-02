@@ -9,6 +9,6 @@
 #include "memory/memory_info.h"
 
 namespace my_inference {
-    int64_t planMemoryOffset(std::vector<MemoryInfo *> memory_infos);
+    int64_t planMemoryOffset(std::vector<TensorMemoryInfo *> memory_infos);
 }
 #endif //MY_INFERENCE_MEMORY_PLANNING_H

@@ -173,10 +173,10 @@ namespace my_inference {
 
         void initMemSize() {
             TensorDim size = getDataTypeSize(data_type_) * numData();
-            memory_info_ = std::make_shared<MemoryInfo>(size, getDataTypeAlignSize(data_type_));
+            memory_info_ = std::make_shared<TensorMemoryInfo>(size, getDataTypeAlignSize(data_type_));
         }
 
-        [[nodiscard]] const std::shared_ptr<MemoryInfo> &memoryInfo() const {
+        [[nodiscard]] const std::shared_ptr<TensorMemoryInfo> &memoryInfo() const {
             return memory_info_;
         }
 
@@ -189,6 +189,6 @@ namespace my_inference {
         std::vector<TensorDim> shape_{};
         void *data_ = nullptr;
         std::vector<ConsumerInfo> consumer_infos_{}; // 尽管consumer的顺序没有意义，但是元素数少时vector性能比set更好
-        std::shared_ptr<MemoryInfo> memory_info_;
+        std::shared_ptr<TensorMemoryInfo> memory_info_;
     };
 }

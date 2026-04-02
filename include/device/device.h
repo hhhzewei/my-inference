@@ -13,7 +13,7 @@ namespace my_inference {
 
     struct Device {
         DeviceType type;
-        int deviceId;
+        int id;
     };
 }
 
