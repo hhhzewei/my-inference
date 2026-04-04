@@ -44,7 +44,7 @@ namespace my_inference {
 
         void preRun();
 
-        bool run(const std::vector<void *> &inputs);
+        bool run(const std::vector<void *> &inputs, const std::vector<void *> &outputs);
 
         void postRun() const;
 

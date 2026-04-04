@@ -40,7 +40,7 @@ add_library(my_inference STATIC src/graph/graph.cpp
         # constant folding
         src/optimize/constant_folding.cpp
         src/optimize/constant_folder/op_folder_util.cpp
-        src/optimize/constant_folder/element_wise_folder.cpp
+        src/optimize/constant_folder/elementwise_folder.cpp
         # cse
         src/optimize/common_subexpression_elimination.cpp
         # op fusion
@@ -51,12 +51,14 @@ add_library(my_inference STATIC src/graph/graph.cpp
         src/memory/memory_planning.cpp
         # kernel key
         src/kernel/kernel_key_generator/kernel_key_util.cpp
-        src/kernel/kernel_key_generator/element_wise_kernel_key_generator.cpp
-        src/kernel/kernel_key_generator/batch_norm_kernel_key_generator.cpp
-        #kernel creator
+        src/kernel/kernel_key_generator/elementwise_key_generator.cpp
+        src/kernel/kernel_key_generator/batch_norm_key_generator.cpp
+        src/kernel/kernel_key_generator/conv_key_generator.cpp
+        #kernel registry
         src/kernel/kernel_util.cpp
-        src/kernel/kernel_creator/element_wise_kernel_creator.cpp
-        src/kernel/kernel_creator/batch_norm_creator.cpp
+        src/kernel/kernel_registry/elementwise_kernel_registry.cpp
+        src/kernel/kernel_registry/batch_norm_registry.cpp
+        src/kernel/kernel_registry/con2D_kernel_registry.cpp
         #memory allocator
         src/memory/memory_allocator/memory_allocator_util.cpp
         src/memory/memory_allocator/cpu_memory_allocator.cpp

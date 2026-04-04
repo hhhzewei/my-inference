@@ -8,18 +8,18 @@
 #include "util/singleton.h"
 
 namespace my_inference {
-    class ElementWiseKeyGenerator : public KernelKeyGenerator, public Singleton<ElementWiseKeyGenerator> {
-        DECLARE_SINGLETON(ElementWiseKeyGenerator);
+    class ElementwiseKeyGenerator : public KernelKeyGenerator, public Singleton<ElementwiseKeyGenerator> {
+        DECLARE_SINGLETON(ElementwiseKeyGenerator);
 
     public:
         static KernelKey generate(const OpType &op_type, const DeviceType &device_type, const DataType &data_type,
                                   bool isBroadcast);
 
     private:
-        constexpr static int IS_BROADCAST_BITS = 1;
-        constexpr static int IS_BROADCAST_OFFSET = RESERVED_BITS - IS_BROADCAST_BITS;
+        constexpr static int IsBroadcastBits = 1;
+        constexpr static int IsBroadcastOffset = ReservedBits - IsBroadcastBits;
 
-        static KernelKey reservedKey(const bool isBroadcast);
+        static KernelKey reservedKey(bool isBroadcast);
 
         [[nodiscard]] KernelKey reservedKey(const OpNode *op) const override;
     };

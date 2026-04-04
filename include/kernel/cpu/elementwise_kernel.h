@@ -11,9 +11,9 @@
 
 namespace my_inference::cpu {
     template<typename T, typename Func>
-    class BinaryElementWiseKernel : public OpKernel {
+    class BinaryElementwiseKernel : public OpKernel {
     public:
-        explicit BinaryElementWiseKernel(const OpNode *op) : N(op->output(0)->numData().value()) {
+        explicit BinaryElementwiseKernel(const OpNode *op) : N(op->output(0)->numData().value()) {
         }
 
         void operator()(const KernelParam &param) override {
@@ -28,9 +28,9 @@ namespace my_inference::cpu {
     };
 
     template<typename T, typename Func>
-    class BinaryElementWiseWithStridesKernel1D : public OpKernel {
+    class BinaryElementwiseWithStridesKernel1D : public OpKernel {
     public:
-        explicit BinaryElementWiseWithStridesKernel1D(const OpNode *op) : N(op->output(0)->dim(0).value()) {
+        explicit BinaryElementwiseWithStridesKernel1D(const OpNode *op) : N(op->output(0)->dim(0).value()) {
         }
 
         void operator()(const KernelParam &param) override {
@@ -46,14 +46,14 @@ namespace my_inference::cpu {
     };
 
     template<typename T, typename Func>
-    class BinaryElementWiseWithStridesKernel2D : public OpKernel {
+    class BinaryElementwiseWithStridesKernel2D : public OpKernel {
     public:
-        explicit BinaryElementWiseWithStridesKernel2D(const OpNode *op) : M(op->output(0)->dim(0).value()),
+        explicit BinaryElementwiseWithStridesKernel2D(const OpNode *op) : M(op->output(0)->dim(0).value()),
                                                                           N(op->output(0)->dim(1).value()) {
         }
 
         void operator()(const KernelParam &param) override {
-            primitive::binaryElementWiseWithStrides2D<T, Func>(
+            primitive::binaryElementwiseWithStrides2D<T, Func>(
                 static_cast<T *>(param.inputs[0].tensor), param.inputs[0].strides,
                 static_cast<T *>(param.inputs[1].tensor), param.inputs[1].strides,
                 static_cast<T *>(param.outputs[0].tensor),
@@ -66,9 +66,9 @@ namespace my_inference::cpu {
     };
 
     template<typename T, typename Func>
-    class BinaryElementWiseWithStridesKernelND : public OpKernel {
+    class BinaryElementwiseWithStridesKernelND : public OpKernel {
     public:
-        explicit BinaryElementWiseWithStridesKernelND(const OpNode *op) : num_data(op->output(0)->numData().value()),
+        explicit BinaryElementwiseWithStridesKernelND(const OpNode *op) : num_data(op->output(0)->numData().value()),
                                                                           num_dim(op->output(0)->numDim()) {
         }
 

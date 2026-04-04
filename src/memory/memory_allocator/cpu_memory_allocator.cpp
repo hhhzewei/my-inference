@@ -11,8 +11,12 @@ void *CpuMemoryAllocator::allocate(const size_t size) {
     return malloc(size);
 }
 
-void CpuMemoryAllocator::memCpy(void *dsc, void *src, size_t size) {
-    memcpy(src, dsc, size);
+void CpuMemoryAllocator::memCpy(void *dst, void *src, const size_t size) {
+    memcpy(dst, src, size);
+}
+
+void CpuMemoryAllocator::memCpyBack(void *dst, void *src, const size_t size) {
+    memcpy(dst, src, size);
 }
 
 void CpuMemoryAllocator::deallocate(void *p) {

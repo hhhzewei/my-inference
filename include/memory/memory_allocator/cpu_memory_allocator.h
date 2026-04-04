@@ -15,7 +15,9 @@ namespace my_inference {
 
         void *allocate(size_t size) override;
 
-        void memCpy(void *dsc, void *src, size_t size) override;
+        void memCpy(void *dst, void *src, size_t size) override;
+
+        void memCpyBack(void *dst, void *src, size_t size) override;
 
         void deallocate(void *p) override;
 

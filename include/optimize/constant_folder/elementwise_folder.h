@@ -9,8 +9,8 @@
 
 namespace my_inference {
     template<typename T, typename Func>
-    class ElementWiseFolder : public OpFolder, public Singleton<ElementWiseFolder<T, Func> > {
-        DECLARE_SINGLETON(ElementWiseFolder)
+    class ElementwiseFolder : public OpFolder, public Singleton<ElementwiseFolder<T, Func> > {
+        DECLARE_SINGLETON(ElementwiseFolder)
 
     public:
         void operator()(OpNode *op) override {
@@ -35,7 +35,7 @@ namespace my_inference {
                     c,
                     numElem);
             } else if (shape.size() == 2) {
-                cpu::primitive::binaryElementWiseWithStrides2D<T, Func>(
+                cpu::primitive::binaryElementwiseWithStrides2D<T, Func>(
                     a, a_strides.data(),
                     b, b_strides.data(),
                     c, shape[0], shape[1]);

@@ -11,5 +11,7 @@
 
 namespace my_inference {
     std::unique_ptr<OpKernel> getOpKernel(OpNode *op);
+
+    enum class ConvType { Standard = 0, Depthwise, Grouped };
 }
 #endif //MY_INFERENCE_KERNEL_UTIL_H
