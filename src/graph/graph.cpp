@@ -40,43 +40,70 @@ void Graph::preRun() {
     // allocate memory
     tensor_memory_pointer_ = static_cast<uint8_t *>(memory_allocator_->allocate(tensor_memory_size_));
     meta_memory_pointer_ = static_cast<uint8_t *>(memory_allocator_->allocate(meta_memory_size_));
-    kernel_sequence_.reserve(topo_op_sequence_.size());
     // kernel sequence
+    kernel_sequence_.reserve(topo_op_sequence_.size());
     for (const auto op: topo_op_sequence_) {
-        if (const OpType op_type = op->type(); op_type == OpType::Source || op_type == OpType::Sink) {
-            continue;
-        }
         KernelParam kernel_param;
         kernel_param.inputs.reserve(op->numInput());
         kernel_param.outputs.reserve(op->numOutput());
-        for (const auto input: op->inputs()) {
+
+        for (int i = 0; i < op->numInput(); ++i) {
+            const auto input = op->input(i);
             kernel_param.inputs.emplace_back(
                 tensor_memory_pointer_ + input->memoryInfo()->offset(),
-                reinterpret_cast<int64_t *>(meta_memory_pointer_ + input->memoryInfo()->offset()),
-                reinterpret_cast<int64_t *>(meta_memory_pointer_ + input->memoryInfo()->offset())
-            );
+                reinterpret_cast<int64_t *>(meta_memory_pointer_ + input->shapeOffset()),
+                reinterpret_cast<int64_t *>(meta_memory_pointer_ + op->inputStridesOffset(i)));
         }
-        for (const auto output: op->outputs()) {
+        for (int i = 0; i < op->numOutput(); ++i) {
+            const auto output = op->output(i);
             kernel_param.outputs.emplace_back(
                 tensor_memory_pointer_ + output->memoryInfo()->offset(),
-                reinterpret_cast<int64_t *>(meta_memory_pointer_ + output->memoryInfo()->offset()),
-                reinterpret_cast<int64_t *>(meta_memory_pointer_ + output->memoryInfo()->offset())
+                reinterpret_cast<int64_t *>(meta_memory_pointer_ + output->shapeOffset()),
+                reinterpret_cast<int64_t *>(meta_memory_pointer_ + op->outputStridesOffset(i))
             );
         }
         kernel_sequence_.emplace_back(getOpKernel(op), std::move(kernel_param));
     }
     // prepare constant
-    for (auto constant: constant_nodes_) {
+    for (const auto constant: constant_nodes_) {
         const TensorNode *constant_tensor = constant->output(0);
         auto &memory_info = constant_tensor->memoryInfo();
         memory_allocator_->memCpy(memory_info->offset() + tensor_memory_pointer_, constant_tensor->data(),
                                   memory_info->size_value());
     }
+    // prepare meta data
+    for (const auto op: topo_op_sequence_) {
+        // inputs strides
+        for (int i = 0; i < op->numInput(); ++i) {
+            auto p = reinterpret_cast<int64_t *>(meta_memory_pointer_ + op->inputStridesOffset(i));
+            for (auto &stride: op->inputStrides(i)) {
+                int64_t stride_value = stride.value();
+                memory_allocator_->memCpy(p++, &stride_value, sizeof(int64_t));
+            }
+        }
+        // outputs strides
+        for (int i = 0; i < op->numOutput(); ++i) {
+            auto p = reinterpret_cast<int64_t *>(meta_memory_pointer_ + op->outputStridesOffset(i));
+            for (auto &stride: op->outputStrides(i)) {
+                int64_t stride_value = stride.value();
+                memory_allocator_->memCpy(p++, &stride_value, sizeof(int64_t));
+            }
+        }
+    }
+    // tensor shape
+    for (const auto &[id,tensor]: tensor_repository_) {
+        auto p = reinterpret_cast<int64_t *>(meta_memory_pointer_ + tensor->shapeOffset());
+        for (auto &dim: tensor->shape()) {
+            int64_t dim_value = dim.value();
+            memory_allocator_->memCpy(p++, &dim_value, sizeof(int64_t));
+        }
+    }
 }
 
-bool Graph::run(const std::vector<void *> &inputs,const std::vector<void *> &outputs) {
+bool Graph::run(const std::vector<void *> &inputs, const std::vector<void *> &outputs) {
     assert(inputs.size()==sourceOp_->numOutput());
     assert(outputs.size()==sinkOp_->numInput());
+    // load input
     for (int i = 0; i < sourceOp_->numOutput(); ++i) {
         auto &memory_info = sourceOp_->output(i)->memoryInfo();
         memory_allocator_->memCpy(memory_info->offset() + tensor_memory_pointer_, inputs[i],
@@ -85,6 +112,7 @@ bool Graph::run(const std::vector<void *> &inputs,const std::vector<void *> &out
     for (auto &[kernel,param]: kernel_sequence_) {
         (*kernel)(param);
     }
+    // load output
     for (int i = 0; i < sinkOp_->numInput(); ++i) {
         auto &memory_info = sinkOp_->input(i)->memoryInfo();
         memory_allocator_->memCpy(memory_info->offset() + tensor_memory_pointer_, outputs[i],
@@ -252,7 +280,9 @@ void Graph::topoSort() {
             // 常量节点不参与拓扑排序
             return;
         }
-        topo_op_sequence_.emplace_back(op);
+        if (op->type() != OpType::Sink && op->type() != OpType::Source) {
+            topo_op_sequence_.emplace_back(op);
+        }
         for (const auto input: op->inputs()) {
             input->updateEndTime(topoIdx);
         }
@@ -293,29 +323,33 @@ void Graph::planTensorMemory() {
 }
 
 void Graph::planMetaMemory() {
-    uint64_t offset = 0;
+    meta_memory_size_ = 0;
     for (auto &[id,op]: op_repository_) {
         if (const auto op_type = op->type(); isVirtual(op_type)) {
             continue;
         }
+        // inputs strides
         std::vector<uint64_t> inputs_strides_offset;
         inputs_strides_offset.reserve(op->numInput());
         for (auto &strides: op->inputsStrides()) {
-            inputs_strides_offset.emplace_back(offset);
-            const uint64_t strides_size = strides.size() * sizeof(int64_t);
-            offset += strides_size;
+            inputs_strides_offset.emplace_back(meta_memory_size_);
+            meta_memory_size_ += strides.size() * sizeof(int64_t);
         }
+        // outputs strides
         std::vector<uint64_t> outputs_strides_offset;
         outputs_strides_offset.reserve(op->numOutput());
         for (auto &strides: op->outputsStrides()) {
-            outputs_strides_offset.emplace_back(offset);
-            const uint64_t strides_size = strides.size() * sizeof(int64_t);
-            offset += strides_size;
+            outputs_strides_offset.emplace_back(meta_memory_size_);
+            meta_memory_size_ += strides.size() * sizeof(int64_t);
         }
         op->setStridesOffset(std::move(inputs_strides_offset), std::move(outputs_strides_offset));
     }
-    meta_memory_size_ = offset;
-    std::cout << "Meta memory size: " << offset << "B" << std::endl;
+    // tensor shape
+    for (auto &[id,tensor]: tensor_repository_) {
+        tensor->setShapeOffset(meta_memory_size_);
+        meta_memory_size_ += tensor->numDim() * sizeof(int64_t);
+    }
+    std::cout << "Meta memory size: " << meta_memory_size_ << "B" << std::endl;
 }
 
 

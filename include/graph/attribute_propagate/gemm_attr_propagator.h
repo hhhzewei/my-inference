@@ -13,10 +13,6 @@ namespace my_inference {
 
     public:
         void operator()(OpNode *) override;
-
-    private:
-        static constexpr int64_t DEFAULT_TRANS_A = false;
-        static constexpr int64_t DEFAULT_TRANS_B = false;
     };
 }
 #endif //MY_INFERENCE_GEMM_ATTR_PROPAGATOR_H

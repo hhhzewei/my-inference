@@ -7,6 +7,19 @@
 
 namespace my_inference::cpu::primitive {
     template<typename T, typename Func>
+    void unaryElementWise(
+        // 输入数据指针
+        const T *a,
+        // 输出数据指针 (Output)
+        T *b,
+        const int64_t N) {
+        Func func;
+        for (int64_t i = 0; i < N; ++i) {
+            b[i] = func(a[i]);
+        }
+    }
+
+    template<typename T, typename Func>
     void binaryElementWise(
         // 输入数据指针
         const T *a, const T *b,
@@ -57,6 +70,14 @@ namespace my_inference::cpu::primitive {
         Func func;
         std::vector<int64_t> coords(num_dim, 0);
         for (int64_t i = 0; i < num_data; ++i) {
+            // offset
+            int64_t a_offset = 0, b_offset = 0, c_offset = 0;
+            for (int64_t dim_i = num_dim - 1; dim_i >= 0; --dim_i) {
+                a_offset += coords[dim_i] * a_strides[dim_i];
+                b_offset += coords[dim_i] * b_strides[dim_i];
+                c_offset += coords[dim_i] * c_strides[dim_i];
+            }
+            c[c_offset] = func(a[a_offset], b[b_offset]);
             // update coords
             for (int64_t dim_i = num_dim - 1; dim_i >= 0; --dim_i) {
                 ++coords[dim_i];
@@ -65,14 +86,6 @@ namespace my_inference::cpu::primitive {
                 }
                 coords[dim_i] = 0;
             }
-            // offset
-            int64_t a_offset = 0, b_offset = 0, c_offset = 0;
-            for (int64_t dim_i = num_dim - 1; dim_i >= 0; --dim_i) {
-                a_offset += coords[dim_i] * a_strides[i];
-                b_offset += coords[dim_i] * b_strides[i];
-                c_offset += coords[dim_i] * c_strides[i];
-            }
-            c[c_offset] = func(a[a_offset], b[b_offset]);
         }
     }
 }

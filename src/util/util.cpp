@@ -13,3 +13,19 @@ std::vector<int64_t> my_inference::toValue(const std::vector<TensorDim> &vec) {
     }
     return ret;
 }
+
+std::vector<void *> my_inference::batchMalloc(const std::vector<size_t> &sizes) {
+    std::vector<void *> ret;
+    ret.reserve(sizes.size());
+    for (const auto size: sizes) {
+        ret.emplace_back(malloc(size));
+    }
+    return ret;
+}
+
+
+void my_inference::batchFree(const std::vector<void *> &ptrs) {
+    for (const auto p: ptrs) {
+        free(p);
+    }
+}

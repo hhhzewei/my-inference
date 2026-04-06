@@ -33,6 +33,10 @@ namespace my_inference {
     }
 
     std::vector<int64_t> toValue(const std::vector<TensorDim> &vec);
+
+    std::vector<void *> batchMalloc(const std::vector<size_t> &sizes);
+
+    void batchFree(const std::vector<void *> &ptrs);
 }
 
 #endif //MY_INFERENCE_UTIL_H

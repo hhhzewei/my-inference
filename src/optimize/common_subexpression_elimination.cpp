@@ -49,15 +49,15 @@ uint64_t my_inference::CommonSubexpressionElimination::hash(const OpNode *op) {
         if (attr.isFloat()) {
             hash_combine(seed, attr.get<float>());
         }
-        if (attr.isInt()) {
+        else if (attr.isInt()) {
             hash_combine(seed, attr.get<int64_t>());
         }
-        if (attr.isFloatVec()) {
+        else if (attr.isFloatVec()) {
             for (float value: attr.get<std::vector<float> >()) {
                 hash_combine(seed, value);
             }
         }
-        if (attr.isIntVec()) {
+        else if (attr.isIntVec()) {
             for (int64_t value: attr.get<std::vector<int64_t> >()) {
                 hash_combine(seed, value);
             }

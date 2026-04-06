@@ -3,11 +3,6 @@
 //
 #include "graph/graph.h"
 
-void batchFree(std::vector<void *> ptrs) {
-    for (auto p: ptrs) {
-        free(p);
-    }
-}
 
 void test_optimize() {
     const auto graph = my_inference::Graph::make("../../../onnx/test_optimize.onnx");
@@ -18,8 +13,8 @@ void test_optimize() {
     std::vector outputs = {malloc(2 * sizeof(float)), malloc(1 * sizeof(float)), malloc(2 * sizeof(float))};
     graph->run(inputs, outputs);
     graph->postRun();
-    batchFree(std::move(inputs));
-    batchFree(std::move(outputs));
+    my_inference::batchFree(std::move(inputs));
+    my_inference::batchFree(std::move(outputs));
 }
 
 void test_fuse() {
@@ -31,8 +26,8 @@ void test_fuse() {
     std::vector outputs = {malloc(1 * sizeof(float))};
     graph->run(inputs, outputs);
     graph->postRun();
-    batchFree(std::move(inputs));
-    batchFree(std::move(outputs));
+    my_inference::batchFree(std::move(inputs));
+    my_inference::batchFree(std::move(outputs));
 }
 
 int main(int argc, char *argv[]) {

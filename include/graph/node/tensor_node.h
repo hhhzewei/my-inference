@@ -180,6 +180,14 @@ namespace my_inference {
             return memory_info_;
         }
 
+        void setShapeOffset(const uint64_t shape_offset) {
+            shape_offset_ = shape_offset;
+        }
+
+        [[nodiscard]] uint64_t shapeOffset() const {
+            return shape_offset_;
+        }
+
     private:
         Id id_;
         std::string name_;
@@ -190,5 +198,6 @@ namespace my_inference {
         void *data_ = nullptr;
         std::vector<ConsumerInfo> consumer_infos_{}; // 尽管consumer的顺序没有意义，但是元素数少时vector性能比set更好
         std::shared_ptr<TensorMemoryInfo> memory_info_;
+        uint64_t shape_offset_;
     };
 }

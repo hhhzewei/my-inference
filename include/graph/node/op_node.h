@@ -156,6 +156,14 @@ namespace my_inference {
             outputs_strides_offset_ = std::move(outputs_strides_offset);
         }
 
+        [[nodiscard]] uint64_t inputStridesOffset(const int i) const {
+            return inputs_strides_offset_[i];
+        }
+
+        [[nodiscard]] uint64_t outputStridesOffset(const int i) const {
+            return outputs_strides_offset_[i];
+        }
+
     private:
         void initInput();
 

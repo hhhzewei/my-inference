@@ -12,9 +12,6 @@ class BatchNormAttrPropagator : public my_inference::AttrPropagator,
                                 public my_inference::Singleton<BatchNormAttrPropagator> {
 public:
     void operator()(my_inference::OpNode *) override;
-
-private:
-    constexpr static float DEFAULT_EPSILON = 0.0f;
 };
 
 

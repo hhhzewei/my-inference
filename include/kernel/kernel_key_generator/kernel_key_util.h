@@ -8,7 +8,7 @@
 #include "kernel/kernel_key_generator/kernel_key_generator.h"
 #include "util/factory.h"
 
-#define REGISTER_KERNEL_KEY_GENERATOR(op_type,kernel_key_generator) GENERIC_REGISTER(my_inference::OpType,my_inference::KernelKeyGenerator *,op_type,kernel_key_generator);
+#define REGISTER_KERNEL_KEY_GENERATOR(op_type,kernel_key_generator) GENERIC_REGISTER(my_inference::OpType,my_inference::KernelKeyGenerator *,op_type,kernel_key_generator)
 
 my_inference::KernelKey getKernelKey(const my_inference::OpNode *op);
 

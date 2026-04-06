@@ -12,9 +12,9 @@ namespace my_inference {
 
         virtual void *allocate(size_t size) =0;
 
-        virtual void memCpy(void *src, void *dst, size_t size) =0;
+        virtual void memCpy(void *dst, void *src, size_t size) =0;
 
-        virtual void memCpyBack(void *src, void *dst, size_t size) =0;
+        virtual void memCpyBack(void *dst, void *src, size_t size) =0;
 
         virtual void deallocate(void *p) =0;
     };

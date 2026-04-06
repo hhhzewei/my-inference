@@ -11,6 +11,23 @@
 
 namespace my_inference::cpu {
     template<typename T, typename Func>
+    class unaryElementwiseKernel : public OpKernel {
+    public:
+        explicit unaryElementwiseKernel(const OpNode *op) : N(op->output(0)->numData().value()) {
+        }
+
+        void operator()(const KernelParam &param) override {
+            primitive::unaryElementWise<T, Func>(
+                static_cast<T *>(param.inputs[0].tensor),
+                static_cast<T *>(param.outputs[0].tensor),
+                N);
+        }
+
+    private:
+        int64_t N;
+    };
+
+    template<typename T, typename Func>
     class BinaryElementwiseKernel : public OpKernel {
     public:
         explicit BinaryElementwiseKernel(const OpNode *op) : N(op->output(0)->numData().value()) {

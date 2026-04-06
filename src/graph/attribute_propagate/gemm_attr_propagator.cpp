@@ -8,6 +8,8 @@
 REGISTER_ATTR_PROPAGATOR(my_inference::OpType::Gemm, &my_inference::GemmAttrPropagator::instance());
 
 void my_inference::GemmAttrPropagator::operator()(OpNode *op) {
-    SetDefaultAttr(op, AttributeKey::TransA, DEFAULT_TRANS_A);
-    SetDefaultAttr(op, AttributeKey::TransB, DEFAULT_TRANS_B);
+    SetDefaultAttr<int64_t>(op, AttributeKey::TransA, false);
+    SetDefaultAttr<int64_t>(op, AttributeKey::TransB, false);
+    SetDefaultAttr<float>(op, AttributeKey::Alpha, 1.0f);
+    SetDefaultAttr<float>(op, AttributeKey::Beta, 1.0f);
 }

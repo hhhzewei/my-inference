@@ -19,8 +19,13 @@ namespace my_inference {
         // gemm
         TransA,
         TransB,
+        Alpha,
+        Beta,
         // batch norm
-        Epsilon
+        Epsilon,
+        // reduce
+        Axes,
+        KeepDims,
     };
 
     inline AttributeKey getAttributeKey(const std::string &name) {
@@ -37,8 +42,10 @@ namespace my_inference {
             {"transA", AttributeKey::TransA},
             {"transB", AttributeKey::TransB},
             // batch norm
-            {"epsilon", AttributeKey::Epsilon}
-
+            {"epsilon", AttributeKey::Epsilon},
+            // reduce
+            {"axes", AttributeKey::Axes},
+            {"keepdims", AttributeKey::KeepDims},
         };
         const auto it = map.find(name);
         if (it == map.end()) {

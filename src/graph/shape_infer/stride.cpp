@@ -13,10 +13,16 @@ void my_inference::initStrides(OpNode *op) {
     // input strides
     std::vector<std::vector<TensorDim> > inputs_strides;
     inputs_strides.reserve(op->numInput());
-    for (const auto input: op->inputs()) {
-        if (isElementWise(op->type())) {
+    if (isElementWise(op->type())) {
+        for (const auto input: op->inputs()) {
             inputs_strides.emplace_back(broadcastStride(input->shape(), op->output(0)->shape()));
-        } else {
+        }
+    } else if (op->type() == OpType::Gemm) {
+        inputs_strides.emplace_back(defaultStride(op->input(0)->shape()));
+        inputs_strides.emplace_back(defaultStride(op->input(1)->shape()));
+        inputs_strides.emplace_back(broadcastStride(op->input(2)->shape(), op->output(0)->shape()));
+    } else {
+        for (const auto input: op->inputs()) {
             inputs_strides.emplace_back(defaultStride(input->shape()));
         }
     }

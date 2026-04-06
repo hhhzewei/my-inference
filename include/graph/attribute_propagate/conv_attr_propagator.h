@@ -13,11 +13,6 @@ namespace my_inference {
 
     public:
         void operator()(OpNode *) override;
-
-    private:
-        static constexpr int64_t DEFAULT_PAD = 0;
-        static constexpr int64_t DEFAULT_STRIDE = 1;
-        static constexpr int64_t DEFAULT_DIALATION = 1;
     };
 }
 

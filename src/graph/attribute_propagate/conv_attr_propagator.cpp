@@ -9,9 +9,9 @@
 REGISTER_ATTR_PROPAGATOR(my_inference::OpType::Conv, &my_inference::ConvAttrPropagator::instance());
 
 void my_inference::ConvAttrPropagator::operator()(OpNode *op) {
-    const int num_image_dim = op->input(0)->numDim() - 2;
-    SetDefaultAttr(op, AttributeKey::Pads, std::vector(num_image_dim * 2, DEFAULT_PAD));
-    SetDefaultAttr(op, AttributeKey::Strides, std::vector(num_image_dim, DEFAULT_STRIDE));
-    SetDefaultAttr(op, AttributeKey::Dilations, std::vector(num_image_dim, DEFAULT_DIALATION));
-    SetDefaultAttr(op, AttributeKey::Group, 1);
+    const int num_image_dim = op->input(1)->numDim() - 2;
+    SetDefaultAttr<std::vector<int64_t> >(op, AttributeKey::Pads, std::vector<int64_t>(num_image_dim * 2, 0));
+    SetDefaultAttr<std::vector<int64_t> >(op, AttributeKey::Strides, std::vector<int64_t>(num_image_dim, 1));
+    SetDefaultAttr<std::vector<int64_t> >(op, AttributeKey::Dilations, std::vector<int64_t>(num_image_dim, 1));
+    SetDefaultAttr<int64_t>(op, AttributeKey::Group, 1);
 }
