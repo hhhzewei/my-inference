@@ -19,8 +19,8 @@ namespace my_inference::cpu {
             W_IN = input_shape[3].value();
             auto &kernel_shape = op->input(1)->shape();
             C_OUT = kernel_shape[0].value();
-            K_W = kernel_shape[1].value();
-            K_H = kernel_shape[2].value();
+            K_W = kernel_shape[2].value();
+            K_H = kernel_shape[3].value();
             auto &output_shape = op->output(0)->shape();
             H_OUT = output_shape[2].value();
             W_OUT = output_shape[3].value();

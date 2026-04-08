@@ -14,9 +14,6 @@ endif ()
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
-find_package(protobuf CONFIG REQUIRED)
-find_package(onnx CONFIG REQUIRED)
-
 add_library(my_inference STATIC src/graph/graph.cpp
         src/graph/node/tensor_node.cpp
         src/graph/node/op_node.cpp
@@ -80,9 +77,17 @@ target_link_options(my_inference INTERFACE
         "$<HOST_LINK:/WHOLEARCHIVE:$<TARGET_FILE:my_inference>>"
 )
 
+find_package(protobuf CONFIG REQUIRED)
+find_package(onnx CONFIG REQUIRED)
+
 target_link_libraries(my_inference
         PUBLIC ONNX::onnx ONNX::onnx_proto
         PUBLIC protobuf::libupb protobuf::libprotoc protobuf::libprotobuf protobuf::libprotobuf-lite)
+
+# onnx runtime
+set(ONNX_RUNTIME_ROOT "D:/CppDevelop/Lib/onnxruntime-win-x64-1.24.4")
+include_directories("${ONNX_RUNTIME_ROOT}/include")
+link_directories("${ONNX_RUNTIME_ROOT}/lib")
 
 add_subdirectory(test/MobileNet-v2)
 add_subdirectory(test/optimize)

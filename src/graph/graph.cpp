@@ -115,8 +115,8 @@ bool Graph::run(const std::vector<void *> &inputs, const std::vector<void *> &ou
     // load output
     for (int i = 0; i < sinkOp_->numInput(); ++i) {
         auto &memory_info = sinkOp_->input(i)->memoryInfo();
-        memory_allocator_->memCpy(memory_info->offset() + tensor_memory_pointer_, outputs[i],
-                                  memory_info->size_value());
+        memory_allocator_->memCpyBack(outputs[i], memory_info->offset() + tensor_memory_pointer_,
+                                      memory_info->size_value());
     }
     return true;
 }

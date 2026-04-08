@@ -11,13 +11,12 @@ int64_t my_inference::planMemoryOffset(std::vector<TensorMemoryInfo *> memory_in
         return m1->size().value() > m2->size().value();
     });
     auto cmpFunc = [](const TensorMemoryInfo *m1, const TensorMemoryInfo *m2) { return m1->offset() < m2->offset(); };
-    std::set<TensorMemoryInfo *, decltype(cmpFunc)> set(cmpFunc);
+    std::multiset<TensorMemoryInfo *, decltype(cmpFunc)> set(cmpFunc);
     int64_t res = 0;
     for (TensorMemoryInfo *m: memory_infos) {
         int64_t offset = 0;
         const int64_t size = m->size_value();
-        for (auto it = set.begin(); it != set.end(); ++it) {
-            const auto m2 = *it;
+        for (const TensorMemoryInfo *m2: set) {
             const int64_t offset2 = m2->offset();
             if (m->endTime() < m2->startTime() || m->startTime() > m2->endTime()) {
                 continue;
