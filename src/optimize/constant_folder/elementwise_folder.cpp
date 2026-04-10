@@ -7,11 +7,11 @@
 #include "util/math.h"
 
 using namespace my_inference;
-REGISTER_OP_FOLDER(getFolderKey(OpType::Add, DataType::Float32, DeviceType::CPU),
+REGISTER_OP_FOLDER(getFolderKey(OpType::Add, DataType::Float32),
                    (&ElementwiseFolder<float, AddFunctor<float> >::instance()));
-REGISTER_OP_FOLDER(getFolderKey(OpType::Sub, DataType::Float32, DeviceType::CPU),
+REGISTER_OP_FOLDER(getFolderKey(OpType::Sub, DataType::Float32),
                    (&ElementwiseFolder<float, SubFunctor<float> >::instance()));
-REGISTER_OP_FOLDER(getFolderKey(OpType::Mul, DataType::Float32, DeviceType::CPU),
+REGISTER_OP_FOLDER(getFolderKey(OpType::Mul, DataType::Float32),
                    (&ElementwiseFolder<float, MulFunctor<float> >::instance()));
-REGISTER_OP_FOLDER(getFolderKey(OpType::Div, DataType::Float32, DeviceType::CPU),
+REGISTER_OP_FOLDER(getFolderKey(OpType::Div, DataType::Float32),
                    (&ElementwiseFolder<float, DivFunctor<float> >::instance()));

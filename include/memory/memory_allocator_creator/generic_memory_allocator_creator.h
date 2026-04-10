@@ -14,7 +14,7 @@ namespace my_inference {
         DECLARE_SINGLETON(GenericMemoryAllocatorCreator);
 
     public:
-        std::unique_ptr<MemoryAllocator> operator()(const Device &device) override {
+        std::unique_ptr<MemoryAllocator> operator()(const Backend &device) override {
             return std::make_unique<T>(device);
         }
     };

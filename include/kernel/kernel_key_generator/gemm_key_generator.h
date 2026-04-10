@@ -12,8 +12,8 @@ namespace my_inference {
         DECLARE_SINGLETON(GemmKeyGenerator);
 
     public:
-        static KernelKey generate(OpType op_type, DeviceType device_type, DataType data_type,
-                                  bool transA, bool transB);
+        static KernelKey generate(DeviceType device_type, isa_type isa_type, OpType op_type,
+                                  DataType data_type, bool transA, bool transB);
 
     private:
         static KernelKey reservedKey(bool transA, bool transB);

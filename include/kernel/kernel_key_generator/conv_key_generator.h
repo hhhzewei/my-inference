@@ -14,8 +14,8 @@ namespace my_inference::cpu {
         DECLARE_SINGLETON(ConvKeyGenerator);
 
     public:
-        static KernelKey generate(const OpType &op_type, const DeviceType &device_type,
-                                  const DataType &data_type, int num_dim, ConvType conv_type);
+        static KernelKey generate(DeviceType device_type, isa_type isa_type, OpType op_type, DataType data_type,
+                                  int num_dim, ConvType conv_type);
 
     private:
         static KernelKey reservedKey(int num_dim, ConvType conv_type);

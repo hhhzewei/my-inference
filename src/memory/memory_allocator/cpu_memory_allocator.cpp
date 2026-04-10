@@ -2,7 +2,6 @@
 // Created by hzw on 2026/3/31.
 //
 #include "memory/memory_allocator/cpu_memory_allocator.h"
-
 #include "memory/memory_allocator/memory_allocator_util.h"
 #include "memory/memory_allocator_creator/generic_memory_allocator_creator.h"
 using namespace my_inference;
@@ -23,5 +22,4 @@ void CpuMemoryAllocator::deallocate(void *p) {
     return free(p);
 }
 
-REGISTER_MEMORY_ALLOCATOR_CREATOR(my_inference::DeviceType::CPU,
-                                  &GenericMemoryAllocatorCreator<CpuMemoryAllocator>::instance());
+REGISTER_MEMORY_ALLOCATOR_CREATOR(DeviceType::CPU, &GenericMemoryAllocatorCreator<CpuMemoryAllocator>::instance());

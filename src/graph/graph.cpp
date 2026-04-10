@@ -36,7 +36,7 @@ void Graph::prepare() {
 }
 
 void Graph::preRun() {
-    memory_allocator_ = getMemoryAllocator(device_);
+    memory_allocator_ = getMemoryAllocator(backend_);
     // allocate memory
     tensor_memory_pointer_ = static_cast<uint8_t *>(memory_allocator_->allocate(tensor_memory_size_));
     meta_memory_pointer_ = static_cast<uint8_t *>(memory_allocator_->allocate(meta_memory_size_));
@@ -62,7 +62,7 @@ void Graph::preRun() {
                 reinterpret_cast<int64_t *>(meta_memory_pointer_ + op->outputStridesOffset(i))
             );
         }
-        kernel_sequence_.emplace_back(getOpKernel(op), std::move(kernel_param));
+        kernel_sequence_.emplace_back(getOpKernel(op, backend_), std::move(kernel_param));
     }
     // prepare constant
     for (const auto constant: constant_nodes_) {

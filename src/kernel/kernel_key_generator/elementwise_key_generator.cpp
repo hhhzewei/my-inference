@@ -11,9 +11,9 @@ REGISTER_KERNEL_KEY_GENERATOR(OpType::Sub, &ElementwiseKeyGenerator::instance())
 REGISTER_KERNEL_KEY_GENERATOR(OpType::Mul, &ElementwiseKeyGenerator::instance());
 REGISTER_KERNEL_KEY_GENERATOR(OpType::Div, &ElementwiseKeyGenerator::instance());
 
-KernelKey ElementwiseKeyGenerator::generate(const OpType &op_type, const DeviceType &device_type,
-    const DataType &data_type, const bool isBroadcast) {
-    return baseKey(op_type, device_type, data_type) | reservedKey(isBroadcast);
+KernelKey ElementwiseKeyGenerator::generate(const DeviceType device_type, const isa_type isa_type,
+                                            const OpType op_type, const DataType data_type, const bool is_broadcast) {
+    return baseKey(device_type, isa_type, op_type, data_type) | reservedKey(is_broadcast);
 }
 
 KernelKey ElementwiseKeyGenerator::reservedKey(const bool isBroadcast) {

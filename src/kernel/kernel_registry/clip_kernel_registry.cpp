@@ -10,7 +10,9 @@
 
 using namespace my_inference;
 
-GENERIC_REGISTER_KERNEL(ClipKeyGenerator::generate(OpType::Clip,DeviceType::CPU,DataType::Float32,ClipType::Standard),
-                        cpu::ClipKernel<float>);
-GENERIC_REGISTER_KERNEL(ClipKeyGenerator::generate(OpType::Clip,DeviceType::CPU,DataType::Float32,ClipType::Relu6),
-                        cpu::unaryElementwiseKernel<float, Relu6Functor<float>>);
+GENERIC_REGISTER_KERNEL(
+    ClipKeyGenerator::generate(DeviceType::CPU,isa_type::Default,OpType::Clip,DataType::Float32,ClipType::Standard),
+    cpu::ClipKernel<float>);
+GENERIC_REGISTER_KERNEL(
+    ClipKeyGenerator::generate(DeviceType::CPU,isa_type::Default,OpType::Clip,DataType::Float32,ClipType::Relu6),
+    cpu::unaryElementwiseKernel<float, Relu6Functor<float>>);

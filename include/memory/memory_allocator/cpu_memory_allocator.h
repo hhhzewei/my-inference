@@ -4,13 +4,13 @@
 
 #ifndef MY_INFERENCE_CPU_MEMORY_ALLOCATOR_H
 #define MY_INFERENCE_CPU_MEMORY_ALLOCATOR_H
-#include "device/device.h"
+#include "backend/backend.h"
 #include "memory/memory_allocator/memory_allocator.h"
 
 namespace my_inference {
     class CpuMemoryAllocator : public MemoryAllocator {
     public:
-        explicit CpuMemoryAllocator(const Device &device) : device_id(device.id) {
+        explicit CpuMemoryAllocator(const Backend &backend) : device_id(backend.deviceId()) {
         }
 
         void *allocate(size_t size) override;

@@ -8,5 +8,6 @@
 
 using namespace my_inference;
 REGISTER_KERNEL_CREATOR(
-    my_inference::GenericKernelKeyGenerator::generate(OpType::BatchNormalization,DeviceType::CPU,DataType::Float32),
+    my_inference::GenericKernelKeyGenerator::generate(DeviceType::CPU,isa_type::Default,OpType::BatchNormalization,
+        DataType::Float32),
     &GenericKernelCreator<cpu::BatchNormKernel<float>>::instance());

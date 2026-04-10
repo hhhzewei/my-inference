@@ -10,6 +10,9 @@
 
 #define REGISTER_KERNEL_KEY_GENERATOR(op_type,kernel_key_generator) GENERIC_REGISTER(my_inference::OpType,my_inference::KernelKeyGenerator *,op_type,kernel_key_generator)
 
-my_inference::KernelKey getKernelKey(const my_inference::OpNode *op);
+namespace my_inference {
+    KernelKey getKernelKey(const OpNode *op, DeviceType device_type,
+                           isa_type isa_type);
+}
 
 #endif //MY_INFERENCE_KERNEL_KEY_UTIL_H

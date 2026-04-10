@@ -9,7 +9,6 @@
 #include "graph/node/data_type.h"
 #include "graph/node/op_type.h"
 #include "graph/node/tensor_dim.h"
-#include "device/device.h"
 #include "graph/node/attribute/attribute_key.h"
 #include "graph/node/attribute/attribute_value.h"
 
@@ -55,10 +54,6 @@ namespace my_inference {
 
         [[nodiscard]] bool isConstant() const {
             return type_ == OpType::Constant;
-        }
-
-        [[nodiscard]] DeviceType deviceType() const {
-            return device_.type;
         }
 
         [[nodiscard]] size_t numInput() const {
@@ -177,6 +172,5 @@ namespace my_inference {
         std::vector<std::vector<TensorDim> > outputs_strides_;
         std::vector<uint64_t> outputs_strides_offset_;
         std::map<AttributeKey, AttributeValue> attributes_;
-        Device device_ = {DeviceType::CPU, 0};
     };
 }

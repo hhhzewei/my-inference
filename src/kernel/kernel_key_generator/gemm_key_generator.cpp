@@ -8,9 +8,10 @@
 using namespace my_inference;
 REGISTER_KERNEL_KEY_GENERATOR(OpType::Gemm, &GemmKeyGenerator::instance());
 
-KernelKey GemmKeyGenerator::generate(const OpType op_type, const DeviceType device_type,
-                                     const DataType data_type, const bool transA, const bool transB) {
-    return baseKey(op_type, device_type, data_type) |
+KernelKey GemmKeyGenerator::generate(const DeviceType device_type, const isa_type isa_type,
+                                     const OpType op_type, const DataType data_type, const bool transA,
+                                     const bool transB) {
+    return baseKey(device_type, isa_type, op_type, data_type) |
            reservedKey(transA, transB);
 }
 

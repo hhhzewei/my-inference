@@ -16,7 +16,7 @@ namespace my_inference::cpu::primitive {
         const int64_t DILATION_H, const int64_t DILATION_W) {
         const int64_t i_s[4] = {C_IN * H_IN * W_IN, H_IN * W_IN, W_IN, 1};
         const int64_t k_s[3] = {K_H * K_W, K_W, 1};
-        const int64_t o_s[4] = {C_IN * H_OUT * W_OUT, H_OUT * W_OUT, W_OUT, 1};
+        const int64_t o_s[4] = {C_OUT * H_OUT * W_OUT, H_OUT * W_OUT, W_OUT, 1};
         for (int64_t n = 0; n < N; ++n) {
             for (int64_t c_out = 0; c_out < C_OUT; ++c_out) {
                 const int64_t c_in = c_out / (C_OUT / C_IN);

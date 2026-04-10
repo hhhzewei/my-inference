@@ -9,11 +9,11 @@
 
 using namespace my_inference;
 GENERIC_REGISTER_KERNEL(
-    cpu::ConvKeyGenerator::generate(OpType::Conv,DeviceType::CPU,DataType::Float32,2,ConvType::Standard),
+    cpu::ConvKeyGenerator::generate(DeviceType::CPU,isa_type::Default,OpType::Conv,DataType::Float32,2,ConvType::Standard),
     cpu::StandardConv2DKernel<float>);
 GENERIC_REGISTER_KERNEL(
-    cpu::ConvKeyGenerator::generate(OpType::Conv,DeviceType::CPU,DataType::Float32,2,ConvType::Depthwise),
+    cpu::ConvKeyGenerator::generate(DeviceType::CPU,isa_type::Default,OpType::Conv,DataType::Float32,2,ConvType::Depthwise),
     cpu::DepthwiseConv2dKernel<float>);
 GENERIC_REGISTER_KERNEL(
-    cpu::ConvKeyGenerator::generate(OpType::Conv,DeviceType::CPU,DataType::Float32,2,ConvType::Grouped),
+    cpu::ConvKeyGenerator::generate(DeviceType::CPU,isa_type::Default,OpType::Conv,DataType::Float32,2,ConvType::Grouped),
     cpu::GroupedConv2DKernel<float>);

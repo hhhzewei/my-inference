@@ -14,7 +14,7 @@ namespace my_inference {
         DECLARE_SINGLETON(ClipKeyGenerator)
 
     public:
-        static KernelKey generate(OpType op_type, DeviceType device_type, DataType data_type, ClipType clip_type);
+        static KernelKey generate(DeviceType device_type, isa_type isa_type, OpType op_type, DataType data_type, ClipType clip_type);
 
     private:
         static KernelKey reservedKey(ClipType clip_type);

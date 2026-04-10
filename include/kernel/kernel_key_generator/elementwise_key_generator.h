@@ -12,8 +12,8 @@ namespace my_inference {
         DECLARE_SINGLETON(ElementwiseKeyGenerator);
 
     public:
-        static KernelKey generate(const OpType &op_type, const DeviceType &device_type, const DataType &data_type,
-                                  bool isBroadcast);
+        static KernelKey generate(DeviceType device_type, isa_type isa_type, OpType op_type,
+                                  DataType data_type, bool is_broadcast);
 
     private:
         constexpr static int IsBroadcastBits = 1;

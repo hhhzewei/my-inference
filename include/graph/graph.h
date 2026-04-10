@@ -8,6 +8,7 @@
 #include <string>
 #include <onnx/onnx-ml.pb.h>
 
+#include "backend/backend.h"
 #include "graph/node/op_node.h"
 #include "graph/node/tensor_node.h"
 #include "graph/node/tensor_type.h"
@@ -237,7 +238,7 @@ namespace my_inference {
             return empty_tensor_.get();
         }
 
-        Device device_{DeviceType::CPU, 0};
+        Backend backend_{DeviceType::CPU, 0};
         constexpr static TensorId EMPTY_TENSOR_ID = 0;
         std::unique_ptr<TensorNode> empty_tensor_ = std::make_unique<TensorNode>(
             EMPTY_TENSOR_ID, "__EMPTY_TENSOR__", nullptr, 0);
