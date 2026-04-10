@@ -6,7 +6,7 @@
 
 using namespace my_inference;
 
-KernelKey my_inference::getKernelKey(const OpNode *op, const DeviceType device_type, const isa_type isa_type) {
+KernelKey my_inference::getKernelKey(const OpNode *op, const DeviceType device_type, const IsaType isa_type) {
     using KernelKeyGeneratorFactory = GenericFactory<OpType, KernelKeyGenerator *>;
     const KernelKeyGenerator *kernel_key_generator = KernelKeyGeneratorFactory::instance().get(op->type());
     if (kernel_key_generator == nullptr) {

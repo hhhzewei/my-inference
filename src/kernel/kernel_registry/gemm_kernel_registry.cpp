@@ -9,14 +9,14 @@
 using namespace my_inference;
 
 GENERIC_REGISTER_KERNEL(
-    GemmKeyGenerator::generate(DeviceType::CPU,isa_type::Default,OpType::Gemm,DataType::Float32,false,false),
+    GemmKeyGenerator::generate(DeviceType::CPU,IsaType::Generic,OpType::Gemm,DataType::Float32,false,false),
     cpu::GemmKernel<float, false, false>);
 GENERIC_REGISTER_KERNEL(
-    GemmKeyGenerator::generate(DeviceType::CPU,isa_type::Default,OpType::Gemm,DataType::Float32,false,true),
+    GemmKeyGenerator::generate(DeviceType::CPU,IsaType::Generic,OpType::Gemm,DataType::Float32,false,true),
     cpu::GemmKernel<float, false, true>);
 GENERIC_REGISTER_KERNEL(
-    GemmKeyGenerator::generate(DeviceType::CPU,isa_type::Default,OpType::Gemm,DataType::Float32,true,false),
+    GemmKeyGenerator::generate(DeviceType::CPU,IsaType::Generic,OpType::Gemm,DataType::Float32,true,false),
     cpu::GemmKernel<float, true, false>);
 GENERIC_REGISTER_KERNEL(
-    GemmKeyGenerator::generate(DeviceType::CPU,isa_type::Default,OpType::Gemm,DataType::Float32,true,true),
+    GemmKeyGenerator::generate(DeviceType::CPU,IsaType::Generic,OpType::Gemm,DataType::Float32,true,true),
     cpu::GemmKernel<float, true, true>);

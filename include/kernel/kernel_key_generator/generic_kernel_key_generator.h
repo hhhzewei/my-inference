@@ -11,7 +11,7 @@ namespace my_inference {
     class GenericKernelKeyGenerator : public KernelKeyGenerator, public Singleton<GenericKernelKeyGenerator> {
     public:
         // 用于注册
-        constexpr static KernelKey generate(const DeviceType device_type, const isa_type isa_type,
+        constexpr static KernelKey generate(const DeviceType device_type, const IsaType isa_type,
                                             const OpType op_type, const DataType data_type) {
             return baseKey(device_type, isa_type, op_type, data_type);
         }

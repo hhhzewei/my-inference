@@ -13,8 +13,8 @@ std::unique_ptr<my_inference::OpKernel> my_inference::getOpKernel(OpNode *op, co
     KernelCreatorFactory &kernel_creator_factory = KernelCreatorFactory::instance();
     DeviceType device_type = backend.deviceType();
     KernelCreator *kernel_creator = kernel_creator_factory.
-            get(getKernelKey(op, backend.deviceType(), isa_type::Default));
-    for (const isa_type isa_type: backend.isaTypes()) {
+            get(getKernelKey(op, backend.deviceType(), IsaType::Generic));
+    for (const IsaType isa_type: backend.isaTypes()) {
         const KernelKey key = getKernelKey(op, device_type, isa_type);
         kernel_creator = kernel_creator_factory.get(key);
     }

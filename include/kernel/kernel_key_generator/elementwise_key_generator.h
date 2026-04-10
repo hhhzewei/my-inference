@@ -12,7 +12,7 @@ namespace my_inference {
         DECLARE_SINGLETON(ElementwiseKeyGenerator);
 
     public:
-        static KernelKey generate(DeviceType device_type, isa_type isa_type, OpType op_type,
+        static KernelKey generate(DeviceType device_type, IsaType isa_type, OpType op_type,
                                   DataType data_type, bool is_broadcast);
 
     private:

@@ -8,7 +8,7 @@
 #include "graph/node/tensor_node.h"
 #include "kernel/op_kernel.h"
 
-namespace my_inference::cpu {
+namespace my_inference::cpu::generic {
     class Conv2DBaseKernel : public OpKernel {
     protected:
         explicit Conv2DBaseKernel(const OpNode *op) {

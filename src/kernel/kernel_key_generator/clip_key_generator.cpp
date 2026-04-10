@@ -10,7 +10,7 @@ using namespace my_inference;
 
 REGISTER_KERNEL_KEY_GENERATOR(OpType::Clip, &ClipKeyGenerator::instance());
 
-KernelKey ClipKeyGenerator::generate(const DeviceType device_type, const isa_type isa_type, const OpType op_type,
+KernelKey ClipKeyGenerator::generate(const DeviceType device_type, const IsaType isa_type, const OpType op_type,
                                      const DataType data_type, const ClipType clip_type) {
     return baseKey(device_type, isa_type, op_type, data_type) | reservedKey(clip_type);
 }

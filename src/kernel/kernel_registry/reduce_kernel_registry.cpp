@@ -9,14 +9,14 @@
 using namespace my_inference;
 
 GENERIC_REGISTER_KERNEL(
-    GenericKernelKeyGenerator::generate(DeviceType::CPU,isa_type::Default,OpType::ReduceMax,DataType::Float32),
+    GenericKernelKeyGenerator::generate(DeviceType::CPU,IsaType::Generic,OpType::ReduceMax,DataType::Float32),
     cpu::ReduceMaxKernel<float>);
 GENERIC_REGISTER_KERNEL(
-    GenericKernelKeyGenerator::generate(DeviceType::CPU,isa_type::Default,OpType::ReduceMin,DataType::Float32),
+    GenericKernelKeyGenerator::generate(DeviceType::CPU,IsaType::Generic,OpType::ReduceMin,DataType::Float32),
     cpu::ReduceMinKernel<float>);
 GENERIC_REGISTER_KERNEL(
-    GenericKernelKeyGenerator::generate(DeviceType::CPU,isa_type::Default,OpType::ReduceMean,DataType::Float32),
+    GenericKernelKeyGenerator::generate(DeviceType::CPU,IsaType::Generic,OpType::ReduceMean,DataType::Float32),
     cpu::ReduceMeanKernel<float>);
 GENERIC_REGISTER_KERNEL(
-    GenericKernelKeyGenerator::generate(DeviceType::CPU,isa_type::Default,OpType::ReduceSum,DataType::Float32),
+    GenericKernelKeyGenerator::generate(DeviceType::CPU,IsaType::Generic,OpType::ReduceSum,DataType::Float32),
     cpu::ReduceSumKernel<float>);

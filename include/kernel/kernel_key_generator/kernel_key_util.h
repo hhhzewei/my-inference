@@ -12,7 +12,7 @@
 
 namespace my_inference {
     KernelKey getKernelKey(const OpNode *op, DeviceType device_type,
-                           isa_type isa_type);
+                           IsaType isa_type);
 }
 
 #endif //MY_INFERENCE_KERNEL_KEY_UTIL_H

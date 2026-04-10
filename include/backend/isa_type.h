@@ -6,7 +6,7 @@
 #include <cstdint>
 
 namespace my_inference {
-    enum class isa_type:uint64_t {
-        Default = 0,
+    enum class IsaType:uint64_t {
+        Generic = 0,
     };
 }

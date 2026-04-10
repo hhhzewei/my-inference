@@ -22,7 +22,7 @@ namespace my_inference {
             return device_id_;
         }
 
-        [[nodiscard]] const std::set<isa_type> &isaTypes() const {
+        [[nodiscard]] const std::set<IsaType> &isaTypes() const {
             return isa_types_;
         }
 
@@ -30,7 +30,7 @@ namespace my_inference {
         DeviceType device_type_ = DeviceType::CPU;
 
         uint64_t isa_type_mask_ = 0;
-        std::set<isa_type> isa_types_ = {isa_type::Default};
+        std::set<IsaType> isa_types_ = {IsaType::Generic};
 
         int device_id_ = 0;
 

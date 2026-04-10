@@ -11,8 +11,8 @@
 using namespace my_inference;
 
 GENERIC_REGISTER_KERNEL(
-    ClipKeyGenerator::generate(DeviceType::CPU,isa_type::Default,OpType::Clip,DataType::Float32,ClipType::Standard),
+    ClipKeyGenerator::generate(DeviceType::CPU,IsaType::Generic,OpType::Clip,DataType::Float32,ClipType::Standard),
     cpu::ClipKernel<float>);
 GENERIC_REGISTER_KERNEL(
-    ClipKeyGenerator::generate(DeviceType::CPU,isa_type::Default,OpType::Clip,DataType::Float32,ClipType::Relu6),
+    ClipKeyGenerator::generate(DeviceType::CPU,IsaType::Generic,OpType::Clip,DataType::Float32,ClipType::Relu6),
     cpu::unaryElementwiseKernel<float, Relu6Functor<float>>);

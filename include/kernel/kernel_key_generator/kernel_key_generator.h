@@ -14,7 +14,7 @@ namespace my_inference {
     public:
         virtual ~KernelKeyGenerator() = default;
 
-        KernelKey operator()(const OpNode *op, const DeviceType device_type, const isa_type isa_type) const {
+        KernelKey operator()(const OpNode *op, const DeviceType device_type, const IsaType isa_type) const {
             return baseKey(device_type, isa_type, op->type(), op->dataType())
                    | reservedKey(op);
         }
@@ -35,7 +35,7 @@ namespace my_inference {
     protected:
         constexpr static unsigned ReservedBits = KeyBits - IsaTypeBits - DeviceTypeBits - OpTypeBits - DataTypeBits;
 
-        constexpr static KernelKey baseKey(const DeviceType device_type, const isa_type isa_type,
+        constexpr static KernelKey baseKey(const DeviceType device_type, const IsaType isa_type,
                                            const OpType op_type, const DataType data_type) {
             return static_cast<KernelKey>(op_type) << OpTypeBitOffset |
                    static_cast<KernelKey>(isa_type) << IsaTypeBitOffset |
