@@ -7,9 +7,9 @@
 #include "graph/node/op_node.h"
 #include "graph/node/tensor_node.h"
 #include "kernel/op_kernel.h"
-#include "kernel/primitive/cpu/element_wise.h"
+#include "kernel/primitive/cpu/generic/element_wise.h"
 
-namespace my_inference::cpu {
+namespace my_inference::cpu::generic {
     template<typename T, typename Func>
     class unaryElementwiseKernel : public OpKernel {
     public:

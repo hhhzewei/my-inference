@@ -4,11 +4,11 @@
 
 #ifndef MY_INFERENCE_ELEMENT_WISE_WITH_STRIDE_KERNEL_CREATOR_H
 #define MY_INFERENCE_ELEMENT_WISE_WITH_STRIDE_KERNEL_CREATOR_H
-#include "kernel/cpu/elementwise_kernel.h"
+#include "kernel/cpu/generic/elementwise_kernel.h"
 #include "kernel/kernel_creator/kernel_creator.h"
 #include "util/singleton.h"
 
-namespace my_inference::cpu {
+namespace my_inference::cpu::generic {
     template<typename Func, typename T>
     class BinaryElementwiseKernelWithStrideCreator :
             public KernelCreator,

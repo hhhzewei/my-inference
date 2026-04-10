@@ -4,10 +4,10 @@
 #pragma once
 
 #include "graph/node/op_node.h"
-#include "kernel/cpu/conv/conv2D_base_kernel.h"
-#include "kernel/primitive/cpu/conv2D/grouped_conv2D.h"
+#include "kernel/cpu/generic/conv/conv2D_base_kernel.h"
+#include "kernel/primitive/cpu/generic/conv2D/grouped_conv2D.h"
 
-namespace my_inference::cpu {
+namespace my_inference::cpu::generic {
     template<typename T>
     class GroupedConv2DKernel : public Conv2DBaseKernel {
     public:

@@ -6,7 +6,7 @@
 #define MY_INFERENCE_CLIP_H
 #include <cstdint>
 
-namespace my_inference::cpu::primitive {
+namespace my_inference::cpu::generic::primitive {
     template<typename T>
     void clip(T *input, T *min, T *max,
               T *output,

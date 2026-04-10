@@ -6,7 +6,7 @@
 #define MY_INFERENCE_REDUCE_H
 #include <cstdint>
 
-namespace my_inference::cpu::primitive {
+namespace my_inference::cpu::generic::primitive {
     template<typename T, typename ReducePolicy>
     void reduce(T *input, T *output,
                 const int64_t Outer, const int64_t Reduce, const int64_t Inner) {

@@ -11,26 +11,26 @@
 using namespace my_inference;
 GENERIC_REGISTER_KERNEL(
     ElementwiseKeyGenerator::generate(DeviceType::CPU,IsaType::Generic,OpType::Add,DataType::Float32,false),
-    cpu::BinaryElementwiseKernel<float, AddFunctor<float>>);
+    cpu::generic::BinaryElementwiseKernel<float, AddFunctor<float>>);
 GENERIC_REGISTER_KERNEL(
     ElementwiseKeyGenerator::generate(DeviceType::CPU,IsaType::Generic,OpType::Sub,DataType::Float32,false),
-    cpu::BinaryElementwiseKernel<float, SubFunctor<float> >);
+    cpu::generic::BinaryElementwiseKernel<float, SubFunctor<float> >);
 GENERIC_REGISTER_KERNEL(
     ElementwiseKeyGenerator::generate(DeviceType::CPU,IsaType::Generic,OpType::Mul,DataType::Float32,false),
-    cpu::BinaryElementwiseKernel<float, MulFunctor<float> >);
+    cpu::generic::BinaryElementwiseKernel<float, MulFunctor<float> >);
 GENERIC_REGISTER_KERNEL(
     ElementwiseKeyGenerator::generate(DeviceType::CPU,IsaType::Generic,OpType::Div,DataType::Float32,false),
-    cpu::BinaryElementwiseKernel<float, DivFunctor<float> >);
+    cpu::generic::BinaryElementwiseKernel<float, DivFunctor<float> >);
 // with stride
 REGISTER_KERNEL_CREATOR(
     ElementwiseKeyGenerator::generate(DeviceType::CPU,IsaType::Generic,OpType::Add,DataType::Float32,true),
-    &(cpu::BinaryElementwiseKernelWithStrideCreator<AddFunctor<float>,float>::instance()));
+    &(cpu::generic::BinaryElementwiseKernelWithStrideCreator<AddFunctor<float>,float>::instance()));
 REGISTER_KERNEL_CREATOR(
     ElementwiseKeyGenerator::generate(DeviceType::CPU,IsaType::Generic,OpType::Sub,DataType::Float32,true),
-    &(cpu::BinaryElementwiseKernelWithStrideCreator<SubFunctor<float>,float>::instance()));
+    &(cpu::generic::BinaryElementwiseKernelWithStrideCreator<SubFunctor<float>,float>::instance()));
 REGISTER_KERNEL_CREATOR(
     ElementwiseKeyGenerator::generate(DeviceType::CPU,IsaType::Generic,OpType::Mul,DataType::Float32,true),
-    &(cpu::BinaryElementwiseKernelWithStrideCreator<MulFunctor<float>,float>::instance()));
+    &(cpu::generic::BinaryElementwiseKernelWithStrideCreator<MulFunctor<float>,float>::instance()));
 REGISTER_KERNEL_CREATOR(
     ElementwiseKeyGenerator::generate(DeviceType::CPU,IsaType::Generic,OpType::Div,DataType::Float32,true),
-    &(cpu::BinaryElementwiseKernelWithStrideCreator<DivFunctor<float>,float>::instance()));
+    &(cpu::generic::BinaryElementwiseKernelWithStrideCreator<DivFunctor<float>,float>::instance()));

@@ -7,9 +7,9 @@
 #include "graph/node/op_node.h"
 #include "graph/node/tensor_node.h"
 #include "kernel/op_kernel.h"
-#include "kernel/primitive/cpu/clip.h"
+#include "kernel/primitive/cpu/generic/clip.h"
 
-namespace my_inference::cpu {
+namespace my_inference::cpu::generic {
     template<typename T>
     class ClipKernel : public OpKernel {
     public:

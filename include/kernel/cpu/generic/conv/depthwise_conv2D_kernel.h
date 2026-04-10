@@ -5,10 +5,10 @@
 #ifndef MY_INFERENCE_CONV2D_DEPTHWISE_KERNEL_H
 #define MY_INFERENCE_CONV2D_DEPTHWISE_KERNEL_H
 #include "graph/node/op_node.h"
-#include "kernel/cpu/conv/conv2D_base_kernel.h"
-#include "kernel/primitive/cpu/conv2D/depthwise_conv2D.h"
+#include "kernel/cpu/generic/conv/conv2D_base_kernel.h"
+#include "kernel/primitive/cpu/generic/conv2D/depthwise_conv2D.h"
 
-namespace my_inference::cpu {
+namespace my_inference::cpu::generic {
     template<typename T>
     class DepthwiseConv2dKernel : public Conv2DBaseKernel {
     public:

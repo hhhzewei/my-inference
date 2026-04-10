@@ -7,9 +7,9 @@
 #include "graph/node/op_node.h"
 #include "graph/node/tensor_node.h"
 #include "kernel/op_kernel.h"
-#include "kernel/primitive/cpu/batch_norm.h"
+#include "kernel/primitive/cpu/generic/batch_norm.h"
 
-namespace my_inference::cpu {
+namespace my_inference::cpu::generic {
     template<typename T>
     class BatchNormKernel : public OpKernel {
     public:

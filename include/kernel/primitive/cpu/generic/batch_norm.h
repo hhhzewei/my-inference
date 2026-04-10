@@ -3,7 +3,7 @@
 //
 #pragma once
 
-namespace my_inference::cpu::primitive {
+namespace my_inference::cpu::generic::primitive {
     template<typename T>
     void batchNorm(T *x, const float *scale, const float *B, const T *mean, T *var,
                    T *y,

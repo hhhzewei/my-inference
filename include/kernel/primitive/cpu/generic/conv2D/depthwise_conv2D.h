@@ -4,7 +4,7 @@
 #pragma once
 #include <cstdint>
 
-namespace my_inference::cpu::primitive {
+namespace my_inference::cpu::generic::primitive {
     template<typename T>
     void depthwise_conv2D(
         T *input, T *kernel, T *bias, T *output,

@@ -7,9 +7,9 @@
 #include "graph/node/op_node.h"
 #include "graph/node/tensor_node.h"
 #include "kernel/op_kernel.h"
-#include "kernel/primitive/cpu/gemm.h"
+#include "kernel/primitive/cpu/generic/gemm.h"
 
-namespace my_inference::cpu {
+namespace my_inference::cpu::generic {
     template<typename T, bool TransA, bool TransB>
     class GemmKernel : public OpKernel {
     public:

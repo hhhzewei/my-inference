@@ -9,7 +9,7 @@
 #include "kernel/kernel_key_generator/kernel_key_generator.h"
 #include "util/singleton.h"
 
-namespace my_inference::cpu {
+namespace my_inference {
     class ConvKeyGenerator : public KernelKeyGenerator, public Singleton<ConvKeyGenerator> {
         DECLARE_SINGLETON(ConvKeyGenerator);
 

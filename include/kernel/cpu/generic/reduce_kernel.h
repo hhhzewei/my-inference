@@ -7,10 +7,10 @@
 #include "graph/node/op_node.h"
 #include "graph/node/tensor_node.h"
 #include "kernel/op_kernel.h"
-#include "kernel/primitive/cpu/reduce.h"
+#include "kernel/primitive/cpu/generic/reduce.h"
 #include "util/math.h"
 
-namespace my_inference::cpu {
+namespace my_inference::cpu::generic {
     template<typename T, typename ReducePolicy>
     class ReduceKernel : public OpKernel {
     public:

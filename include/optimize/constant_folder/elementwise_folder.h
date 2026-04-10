@@ -3,7 +3,7 @@
 //
 #pragma once
 #include "graph/node/tensor_node.h"
-#include "kernel/primitive/cpu/element_wise.h"
+#include "../../kernel/primitive/cpu/generic/element_wise.h"
 #include "optimize/constant_folder/op_folder.h"
 #include "util/singleton.h"
 
@@ -29,13 +29,13 @@ namespace my_inference {
             op->output(0)->setData(c);
             // 调用原语
             if (shape.size() == 1) {
-                cpu::primitive::binaryElementWiseWithStrides1D<T, Func>(
+                cpu::generic::primitive::binaryElementWiseWithStrides1D<T, Func>(
                     a, a_strides.data(),
                     b, b_strides.data(),
                     c,
                     numElem);
             } else if (shape.size() == 2) {
-                cpu::primitive::binaryElementwiseWithStrides2D<T, Func>(
+                cpu::generic::primitive::binaryElementwiseWithStrides2D<T, Func>(
                     a, a_strides.data(),
                     b, b_strides.data(),
                     c, shape[0], shape[1]);

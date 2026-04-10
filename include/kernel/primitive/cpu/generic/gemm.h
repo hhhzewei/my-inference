@@ -6,7 +6,7 @@
 #define MY_INFERENCE_GEMM_H
 #include <cstdint>
 
-namespace my_inference::cpu::primitive {
+namespace my_inference::cpu::generic::primitive {
     template<typename T, bool TransA, bool TransB>
     void gemm(const T *a, const T *b,
               const T *bias, const int64_t bias_stride_0, const int64_t bias_stride_1,

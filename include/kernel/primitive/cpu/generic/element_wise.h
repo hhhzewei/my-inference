@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace my_inference::cpu::primitive {
+namespace my_inference::cpu::generic::primitive {
     template<typename T, typename Func>
     void unaryElementWise(
         // 输入数据指针
