@@ -3,7 +3,7 @@
 //
 
 #include "kernel/kernel_key_generator/clip_key_generator.h"
-
+#include "graph/node/tensor_node.h"
 #include "kernel/kernel_key_generator/kernel_key_util.h"
 
 using namespace my_inference;

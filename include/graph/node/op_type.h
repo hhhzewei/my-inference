@@ -165,7 +165,7 @@ namespace my_inference {
             case OpType::Exp:
             case OpType::Log:
             // --- 4. 裁剪与约束 (Clipping/Constraint) ---
-            case OpType::Clip:
+            // case OpType::Clip:
             // --- 5. 选择逻辑 (Conditional) ---
             case OpType::Where:
                 return true;

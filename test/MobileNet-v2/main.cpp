@@ -102,6 +102,7 @@ int main(int argc, char *argv[]) {
     // load model
     std::cout << "Load Model" << std::endl;
     const auto graph = my_inference::Graph::make(model_path);
+    graph->appendPass(my_inference::PassType::ConvLayoutOptimize);
     graph->optimize();
     graph->prepare();
     graph->preRun();

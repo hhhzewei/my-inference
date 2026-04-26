@@ -3,87 +3,85 @@
 //
 #pragma once
 #include <cstdint>
-#include <vector>
+
+#include "backend/isa_traits/cpu_traits.h"
+#include "kernel/kernel_args/broadcast_binary_elementwise_args.h"
+#include "kernel/kernel_args/elementwise_args.h"
+#include "util/arithmetic_op_type/unary_op_type.h"
 
 namespace my_inference::cpu::generic::primitive {
-    template<typename T, typename Func>
+    template<typename T, UnaryOpType op_type>
     void unaryElementWise(
         // 输入数据指针
         const T *a,
         // 输出数据指针 (Output)
         T *b,
-        const int64_t N) {
-        Func func;
-        for (int64_t i = 0; i < N; ++i) {
-            b[i] = func(a[i]);
+        const ElementWiseArgs args) {
+        for (int64_t i = 0; i < args.num_elem; ++i) {
+            b[i] = Traits<T>::unaryOp < op_type > (a[i]);
         }
     }
 
-    template<typename T, typename Func>
+    template<typename T, BinaryOpType op_type>
     void binaryElementWise(
         // 输入数据指针
         const T *a, const T *b,
         // 输出数据指针 (Output)
         T *c,
-        const int64_t N) {
-        Func func;
-        for (int64_t i = 0; i < N; ++i) {
-            c[i] = func(a[i], b[i]);
+        const ElementWiseArgs args) {
+        for (int64_t i = 0; i < args.num_elem; ++i) {
+            c[i] = Traits<T>::binaryOp<op_type>(a[i], b[i]);
         }
     }
 
-    template<typename T, typename Func>
-    void binaryElementWiseWithStrides1D(
+
+    template<typename T, BinaryOpType op_type>
+    void broadcastBinaryElementWise1D(
         // 输入数据指针
-        const T *a, const int64_t *a_strides,
-        const T *b, const int64_t *b_strides,
+        const T *a, const T *b,
         // 输出数据指针 (Output)
         T *c,
-        const int64_t N) {
-        Func func;
-        for (int64_t i = 0; i < N; ++i) {
-            c[i] = func(a[i * a_strides[0]], b[i * b_strides[0]]);
+        const BroadcastBinaryElementwiseArgs args) {
+        for (int64_t i = 0; i < args.num_elem; ++i) {
+            c[i] = Traits<T>::binaryOp < op_type > (a[i * args.a_strides[0]], b[i * args.b_strides[0]]);
         }
     }
 
-    template<typename T, typename Func>
-    void binaryElementwiseWithStrides2D(
-        const T *a, const int64_t *a_strides,
-        const T *b, const int64_t *b_strides,
-        T *c, const int64_t M, const int64_t N) {
-        Func func;
-        for (int64_t i = 0; i < M; ++i) {
-            for (int64_t j = 0; j < N; ++j) {
-                c[i * N + j] = func(a[i * a_strides[0] + j * a_strides[1]],
-                                    b[i * b_strides[0] + j * b_strides[1]]);
+    template<typename T, BinaryOpType op_type>
+    void broadcastBinaryElementwise2D(
+        const T *a,
+        const T *b,
+        T *c, const BroadcastBinaryElementwiseArgs args) {
+        for (int64_t i = 0; i < args.shape[0]; ++i) {
+            for (int64_t j = 0; j < args.shape[1]; ++j) {
+                c[i * args.shape[1] + j] = Traits<T>::binaryOp < op_type > (
+                                               a[i * args.a_strides[0] + j * args.a_strides[1]],
+                                               b[i * args.b_strides[0] + j * args.b_strides[1]]);
             }
         }
     }
 
-    template<typename T, typename Func>
-    void binaryElementWiseWithStridesND(
-        const T *a, const int64_t *a_strides,
-        const T *b, const int64_t *b_strides,
-        T *c, const int64_t *c_strides,
-        const int64_t *shape,
-        const int64_t num_data, const int64_t num_dim) {
-        Func func;
-        std::vector<int64_t> coords(num_dim, 0);
-        for (int64_t i = 0; i < num_data; ++i) {
-            // offset
-            int64_t a_offset = 0, b_offset = 0, c_offset = 0;
-            for (int64_t dim_i = num_dim - 1; dim_i >= 0; --dim_i) {
-                a_offset += coords[dim_i] * a_strides[dim_i];
-                b_offset += coords[dim_i] * b_strides[dim_i];
-                c_offset += coords[dim_i] * c_strides[dim_i];
-            }
-            c[c_offset] = func(a[a_offset], b[b_offset]);
+    template<typename T, BinaryOpType op_type>
+    void broadcastBinaryElementWiseND(
+        const T *a, const T *b,
+        T *c,
+        const BroadcastBinaryElementwiseArgs args) {
+        int64_t coords[8]{};
+        int64_t a_offset = 0, b_offset = 0;
+        const int64_t *a_strides = args.a_strides;
+        const int64_t *b_strides = args.b_strides;
+        for (int64_t c_offset = 0; c_offset < args.num_elem; ++c_offset) {
+            c[c_offset] = Traits<T>::binaryOp < op_type > (a[a_offset], b[b_offset]);
             // update coords
-            for (int64_t dim_i = num_dim - 1; dim_i >= 0; --dim_i) {
+            for (int64_t dim_i = args.num_dim - 1; dim_i >= 0; --dim_i) {
                 ++coords[dim_i];
-                if (coords[dim_i] < shape[dim_i]) {
+                a_offset += a_strides[dim_i];
+                b_offset += b_strides[dim_i];
+                if (coords[dim_i] < args.shape[dim_i]) {
                     break;
                 }
+                a_offset -= coords[dim_i] * a_strides[dim_i];
+                b_offset -= coords[dim_i] * b_strides[dim_i];
                 coords[dim_i] = 0;
             }
         }

@@ -14,6 +14,8 @@
 #include "graph/node/tensor_type.h"
 #include "kernel/op_kernel.h"
 #include "memory/memory_allocator/memory_allocator.h"
+#include "optimize/optimizer_util.h"
+#include "optimize/pass_type.h"
 #include "util/id_generator.h"
 
 namespace my_inference {
@@ -37,6 +39,10 @@ namespace my_inference {
 
         [[nodiscard]] OpNode *sinkOp() const {
             return sinkOp_.get();
+        }
+
+        Backend &backend() {
+            return backend_;
         }
 
         void optimize();
@@ -81,6 +87,9 @@ namespace my_inference {
             }
             op_repository_.erase(op->id());
         }
+
+        TensorNode *createTensor(DataType data_type,
+                                 std::vector<TensorDim> shape, void *raw_data = nullptr);
 
         TensorNode *createConstant(DataType data_type, std::vector<TensorDim> shape, void *raw_data);
 
@@ -128,6 +137,20 @@ namespace my_inference {
 
         void shrinkOp(const std::set<OpId> &aliveIds);
 
+        void appendPass(const PassType pass) {
+            optimizer_passes.push_back(pass);
+        }
+
+        void checkTensor() {
+            for (auto &[id,tensor]: tensor_repository_) {
+                for (auto &dim: tensor->shape()) {
+                    if (!dim.isValue()) {
+                        std::cout << "Tensor: " << tensor->name() << "dim error" << std::endl;
+                    }
+                }
+            }
+        }
+
     private:
         Graph() = default;
 
@@ -141,9 +164,31 @@ namespace my_inference {
                     std::map<std::string, OpNode *> &global_op_map,
                     std::map<std::string, TensorNode *> &global_tensor_map);
 
-        OpNode *createOp(const std::string &name, OpType type,
-                         const std::map<AttributeKey, AttributeValue> &attribute_map,
-                         std::map<std::string, OpNode *> &global_op_map);
+        OpNode *createOp(const std::string &name, OpType type, std::vector<TensorNode *> inputs,
+                         std::vector<TensorNode *> outputs,
+                         std::map<AttributeKey, AttributeValue> attribute_map,
+                         std::map<std::string, OpNode *> &global_op_map) {
+            if (const auto it = global_op_map.find(name); it != global_op_map.end()) {
+                return it->second;
+            }
+            OpId id = op_id_generator_.next();
+            auto [it,success] = op_repository_.emplace(
+                id, std::make_unique<OpNode>(id, name, type, std::move(inputs), std::move(outputs),
+                                             std::move(attribute_map)));
+            OpNode *raw_p = it->second.get();
+            global_op_map.emplace(name, raw_p);
+            if (type == OpType::Constant) {
+                constant_nodes_.emplace_back(raw_p);
+            }
+            return raw_p;
+        }
+
+        TensorNode *createTensor(const std::string &name,
+                                 std::map<std::string, TensorNode *> &global_tensor_map);
+
+        TensorNode *createTensor(const onnx::TensorProto &tensor_proto,
+                                 std::map<std::string, TensorNode *> &global_tensor_map);
+
 
         template<TensorType TENSOR_TYPE>
         void loadTensor(const google::protobuf::RepeatedPtrField<onnx::ValueInfoProto> &value_info_list,
@@ -156,8 +201,7 @@ namespace my_inference {
             if constexpr (TENSOR_TYPE == TensorType::INPUT || TENSOR_TYPE == TensorType::OUTPUT) {
                 tensors.reserve(value_info_list.size());
             }
-            for (int i = 0; i < value_info_list.size(); ++i) {
-                auto &valueInfo = value_info_list[i];
+            for (const auto &valueInfo: value_info_list) {
                 const std::string &name = valueInfo.name();
                 // shape
                 auto &tensor_type = valueInfo.type().tensor_type();
@@ -180,16 +224,7 @@ namespace my_inference {
                     data_type = getDataType(tensor_type.elem_type());
                 }
                 // tensor
-                TensorNode *tensor = nullptr;
-                if constexpr (TENSOR_TYPE == TensorType::INPUT) {
-                    tensor = createTensor(name, sourceOp(), i, global_tensor_map);
-                } else {
-                    auto it = global_tensor_map.find(name);
-                    if (it == global_tensor_map.end()) {
-                        continue;
-                    }
-                    tensor = it->second;
-                }
+                TensorNode *tensor = createTensor(name, global_tensor_map);
                 tensor->init(data_type, shape);
                 // merge input or output
                 if constexpr (TENSOR_TYPE == TensorType::INPUT || TENSOR_TYPE == TensorType::OUTPUT) {
@@ -197,10 +232,14 @@ namespace my_inference {
                 }
             }
             if constexpr (TENSOR_TYPE == TensorType::INPUT) {
-                sourceOp_->init({}, std::move(tensors));
+                sourceOp_ = std::make_unique<OpNode>(op_id_generator_.next(), "__GRAPH_SOURCE__",
+                                                     OpType::Source, std::vector<TensorNode *>{}, std::move(tensors),
+                                                     std::map<AttributeKey, AttributeValue>{});
             }
             if constexpr (TENSOR_TYPE == TensorType::OUTPUT) {
-                sinkOp_->init(std::move(tensors), {});
+                sinkOp_ = std::make_unique<OpNode>(op_id_generator_.next(), "__GRAPH_SINK__",
+                                                   OpType::Sink, std::move(tensors), std::vector<TensorNode *>{},
+                                                   std::map<AttributeKey, AttributeValue>{});
             }
         }
 
@@ -208,27 +247,11 @@ namespace my_inference {
                         std::map<std::string, TensorNode *> &global_tensor_map,
                         std::map<std::string, OpNode *> &global_op_map);
 
-        TensorNode *createTensor(const std::string &name,
-                                 OpNode *producer, int output_idx,
-                                 std::map<std::string, TensorNode *> &global_tensor_map);
-
-        TensorNode *createTensor(OpNode *producer, int output_idx, const onnx::TensorProto &tensor_proto,
-                                 std::map<std::string, TensorNode *> &global_tensor_map);
-
         void inferDataTypeAndShape() const;
-
-        TensorNode *createTensor(OpNode *producer, int output_idx, DataType data_type,
-                                 std::vector<TensorDim> shape, void *raw_data);
-
-        TensorNode *createTensor(std::string name, OpNode *producer, int output_idx,
-                                 DataType data_type = DataType::Unknown, std::vector<TensorDim> shape = {},
-                                 void *raw_data = nullptr);
 
         void topoSort();
 
         void planTensorMemory();
-
-        void planMetaMemory();
 
         [[nodiscard]] std::map<OpNode::Id, size_t> opInDegrees() const;
 
@@ -238,29 +261,26 @@ namespace my_inference {
             return empty_tensor_.get();
         }
 
-        Backend backend_{DeviceType::CPU, 0};
+        // Backend backend_{DeviceType::CPU, 0, {IsaType::Generic}};
+        Backend backend_{DeviceType::CPU, 0, {IsaType::Generic, IsaType::Avx512}};
         constexpr static TensorId EMPTY_TENSOR_ID = 0;
         std::unique_ptr<TensorNode> empty_tensor_ = std::make_unique<TensorNode>(
-            EMPTY_TENSOR_ID, "__EMPTY_TENSOR__", nullptr, 0);
+            EMPTY_TENSOR_ID, "__EMPTY_TENSOR__");
         IdGenerator<OpId, 0> op_id_generator_{};
         IdGenerator<TensorId, EMPTY_TENSOR_ID + 1> tensor_id_generator_{};
-        std::unique_ptr<OpNode> sourceOp_ = std::make_unique<OpNode>(op_id_generator_.next(), "__GRAPH_SOURCE__",
-                                                                     OpType::Source,
-                                                                     std::map<AttributeKey, AttributeValue>{});
-        std::unique_ptr<OpNode> sinkOp_ = std::make_unique<OpNode>(op_id_generator_.next(), "__GRAPH_SINK__",
-                                                                   OpType::Sink,
-                                                                   std::map<AttributeKey, AttributeValue>{});
+        std::unique_ptr<OpNode> sourceOp_{};
+        std::unique_ptr<OpNode> sinkOp_{};
         std::vector<OpNode *> constant_nodes_;
         std::map<OpId, std::unique_ptr<OpNode> > op_repository_;
         std::map<TensorId, std::unique_ptr<TensorNode> > tensor_repository_;
+        // optimize
+        std::vector<PassType> optimizer_passes = GenericPasses;
         // prepare
         std::vector<OpNode *> topo_op_sequence_;
         uint64_t tensor_memory_size_ = 0;
-        uint64_t meta_memory_size_ = 0;
         // run
         std::unique_ptr<MemoryAllocator> memory_allocator_;
         uint8_t *tensor_memory_pointer_ = nullptr;
-        uint8_t *meta_memory_pointer_ = nullptr;
         std::vector<std::pair<std::unique_ptr<OpKernel>, KernelParam> > kernel_sequence_;
     };
 }

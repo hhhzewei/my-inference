@@ -2,28 +2,27 @@
 // Created by hzw on 2026/2/17.
 //
 #pragma once
-#include <vector>
 
 namespace my_inference {
     struct KernelParam {
-        struct TensorDesc {
-            TensorDesc(void *tensor, int64_t *shape, int64_t *strides) : tensor(tensor), shape(shape),
-                                                                         strides(strides) {
-            }
-
-            void *tensor;
-            int64_t *shape;
-            int64_t *strides;
-        };
-
-        std::vector<TensorDesc> inputs;
-        std::vector<TensorDesc> outputs;
+        std::vector<void *> inputs;
+        std::vector<void *> outputs;
     };
 
     class OpKernel {
     public:
+        explicit OpKernel(const OpNode *op) : op_(op) {
+        }
+
+        [[nodiscard]] const OpNode *op() const {
+            return op_;
+        }
+
         virtual ~OpKernel() = default;
 
         virtual void operator()(const KernelParam &ctx) = 0;
+
+    private:
+        const OpNode *op_;
     };
 }

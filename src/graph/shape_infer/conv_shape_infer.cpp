@@ -6,7 +6,6 @@
 #include "graph/node/attribute/attribute_key.h"
 #include "graph/node/tensor_node.h"
 #include "graph/shape_infer/shape_infer_util.h"
-#include "graph/shape_infer/stride.h"
 using namespace my_inference;
 
 REGISTER_SHAPE_INFER(OpType::Conv, &ConvShapeInfer::instance());
@@ -44,13 +43,4 @@ void ConvShapeInfer::operator()(OpNode *op) {
                 dilations[i]));
     }
     op->output(0)->setShape(expected_shape);
-    // inputs strides
-    std::vector<std::vector<TensorDim> > inputs_strides;
-    inputs_strides.reserve(op->numInput());
-    for (auto &input: op->inputs()) {
-        inputs_strides.emplace_back(defaultStride(input->shape()));
-    }
-    op->setInputsStrides(std::move(inputs_strides));
-    // outputs strides
-    op->setOutputsStrides(std::vector<std::vector<TensorDim> >{defaultStride(op->output(0)->shape())});
 }

@@ -4,6 +4,7 @@
 #include "graph/attribute_propagate/conv_attr_propagator.h"
 #include "graph/attribute_propagate/attr_propagate_util.h"
 #include "graph/node/tensor_node.h"
+#include "graph/node/attribute/conv_layout.h"
 
 
 REGISTER_ATTR_PROPAGATOR(my_inference::OpType::Conv, &my_inference::ConvAttrPropagator::instance());
@@ -14,4 +15,5 @@ void my_inference::ConvAttrPropagator::operator()(OpNode *op) {
     SetDefaultAttr<std::vector<int64_t> >(op, AttributeKey::Strides, std::vector<int64_t>(num_image_dim, 1));
     SetDefaultAttr<std::vector<int64_t> >(op, AttributeKey::Dilations, std::vector<int64_t>(num_image_dim, 1));
     SetDefaultAttr<int64_t>(op, AttributeKey::Group, 1);
+    SetDefaultAttr<int64_t>(op, AttributeKey::Layout, static_cast<int64_t>(ConvLayout::NCHW));
 }

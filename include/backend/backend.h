@@ -11,7 +11,9 @@
 namespace my_inference {
     class Backend {
     public:
-        Backend(const DeviceType device_type, const int device_id) : device_type_(device_type), device_id_(device_id) {
+        Backend(const DeviceType device_type, const int device_id,
+                std::set<IsaType> isa_types) : device_type_(device_type),
+                                               isa_types_(std::move(isa_types)), device_id_(device_id) {
         }
 
         [[nodiscard]] DeviceType deviceType() const {
@@ -26,12 +28,14 @@ namespace my_inference {
             return isa_types_;
         }
 
+        [[nodiscard]] bool support(IsaType isa_type) const {
+            return isa_types_.count(isa_type) == 1;
+        }
+
     private:
         DeviceType device_type_ = DeviceType::CPU;
-
         uint64_t isa_type_mask_ = 0;
         std::set<IsaType> isa_types_ = {IsaType::Generic};
-
         int device_id_ = 0;
 
         ;

@@ -4,6 +4,7 @@
 
 #ifndef MY_INFERENCE_UTIL_H
 #define MY_INFERENCE_UTIL_H
+#include <cassert>
 #include <vector>
 #include "graph/node/tensor_dim.h"
 
@@ -33,6 +34,11 @@ namespace my_inference {
     }
 
     std::vector<int64_t> toValue(const std::vector<TensorDim> &vec);
+
+    inline int64_t alignUp(const int64_t num, const int64_t alignment) {
+        assert(alignment > 0 && (alignment & (alignment - 1)) == 0);
+        return (num + alignment - 1) & (~(alignment - 1));
+    }
 
     std::vector<void *> batchMalloc(const std::vector<size_t> &sizes);
 

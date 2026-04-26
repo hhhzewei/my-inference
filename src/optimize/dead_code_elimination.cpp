@@ -3,8 +3,11 @@
 //
 
 #include "optimize/dead_code_elimination.h"
+#include "optimize/optimizer_util.h"
 
 using namespace my_inference;
+
+REGISTER_OPTIMIZER(PassType::DeadCodeElimination, &DeadCodeElimination::instance());
 
 void DeadCodeElimination::operator()(Graph *graph) {
     std::set<OpNode::Id> used_op;

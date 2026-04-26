@@ -4,7 +4,6 @@
 
 #ifndef MY_INFERENCE_OP_FOLDER_UTIL_H
 #define MY_INFERENCE_OP_FOLDER_UTIL_H
-#include "backend/device_type.h"
 #include "optimize/constant_folder/op_folder.h"
 #include "util/factory.h"
 

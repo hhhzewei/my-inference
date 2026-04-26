@@ -9,7 +9,7 @@
 
 namespace my_inference {
     class GemmShapeInfer : public ShapeInfer, public Singleton<GemmShapeInfer> {
-        DECLARE_SINGLETON(GemmShapeInfer)
+        DECLARE_SINGLETON(GemmShapeInfer);
 
     public:
         void operator()(OpNode *) override;

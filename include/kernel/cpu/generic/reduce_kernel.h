@@ -14,38 +14,39 @@ namespace my_inference::cpu::generic {
     template<typename T, typename ReducePolicy>
     class ReduceKernel : public OpKernel {
     public:
-        explicit ReduceKernel(const OpNode *op) {
+        explicit ReduceKernel(const OpNode *op): OpKernel(op) {
             std::vector<int64_t> axes = op->attribute<std::vector<int64_t> >(AttributeKey::Axes).value();
             auto &shape = op->input(0)->shape();
             int axe = 0;
+            args_.Outer = 1;
             for (; axe < shape.size(); ++axe) {
                 if (std::find(axes.begin(), axes.end(), axe) != axes.end()) {
                     break;
                 }
-                Outer *= shape[axe].value();
+                args_.Outer *= shape[axe].value();
             }
+            args_.Reduce = 1;
             for (; axe < shape.size(); ++axe) {
                 if (std::find(axes.begin(), axes.end(), axe) == axes.end()) {
                     break;
                 }
-                Reduce *= shape[axe].value();
+                args_.Reduce *= shape[axe].value();
             }
+            args_.Inner = 1;
             for (; axe < shape.size(); ++axe) {
-                Inner *= shape[axe].value();
+                args_.Inner *= shape[axe].value();
             }
         }
 
         void operator()(const KernelParam &ctx) override {
             primitive::reduce<T, ReducePolicy>(
-                static_cast<T *>(ctx.inputs[0].tensor), static_cast<T *>(ctx.outputs[0].tensor),
-                Outer, Reduce, Inner
+                static_cast<T *>(ctx.inputs[0]), static_cast<T *>(ctx.outputs[0]),
+                args_
             );
         }
 
     private:
-        int64_t Outer = 1;
-        int64_t Reduce = 1;
-        int64_t Inner = 1;
+        ReduceArgs args_{};
     };
 
     template<typename T>

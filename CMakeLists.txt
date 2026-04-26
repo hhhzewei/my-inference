@@ -17,6 +17,8 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 add_library(my_inference STATIC src/graph/graph.cpp
         src/graph/node/tensor_node.cpp
         src/graph/node/op_node.cpp
+        src/graph/node/data_type.cpp
+        src/graph/node/shape_util.cpp
         # attribute propagate
         src/graph/attribute_propagate/attr_propagate_util.cpp
         src/graph/attribute_propagate/conv_attr_propagator.cpp
@@ -33,6 +35,10 @@ add_library(my_inference STATIC src/graph/graph.cpp
         src/graph/shape_infer/gemm_shape_infer.cpp
         src/graph/shape_infer/reduce_shape_infer.cpp
         src/graph/shape_infer/stride.cpp
+        # backend
+        src/backend/isa_type.cpp
+        # optimizer
+        src/optimize/optimizer_util.cpp
         # dce
         src/optimize/dead_code_elimination.cpp
         # constant folding
@@ -45,6 +51,8 @@ add_library(my_inference STATIC src/graph/graph.cpp
         src/optimize/op_fusion.cpp
         src/optimize/op_fusion/op_fusion_pattern.cpp
         src/optimize/op_fusion/conv_batchnorm_fuser.cpp
+        # layout
+        src/optimize/conv_layout_optimizer.cpp
         # memory planning
         src/memory/memory_planning.cpp
         # kernel key
@@ -56,13 +64,21 @@ add_library(my_inference STATIC src/graph/graph.cpp
         src/kernel/kernel_key_generator/gemm_key_generator.cpp
         src/kernel/kernel_key_generator/reduce_key_generator.cpp
         #kernel registry
+        # cpu generic
         src/kernel/kernel_util.cpp
-        src/kernel/kernel_registry/elementwise_kernel_registry.cpp
-        src/kernel/kernel_registry/batch_norm_registry.cpp
-        src/kernel/kernel_registry/con2D_kernel_registry.cpp
-        src/kernel/kernel_registry/clip_kernel_registry.cpp
-        src/kernel/kernel_registry/reduce_kernel_registry.cpp
-        src/kernel/kernel_registry/gemm_kernel_registry.cpp
+        src/kernel/kernel_registry/cpu/generic/elementwise_kernel_registry.cpp
+        src/kernel/kernel_registry/cpu/generic/batch_norm_kernel_registry.cpp
+        src/kernel/kernel_registry/cpu/generic/con2D_kernel_registry.cpp
+        src/kernel/kernel_registry/cpu/generic/clip_kernel_registry.cpp
+        src/kernel/kernel_registry/cpu/generic/reduce_kernel_registry.cpp
+        src/kernel/kernel_registry/cpu/generic/gemm_kernel_registry.cpp
+        src/kernel/kernel_registry/cpu/generic/transpose_kernel_registry.cpp
+        src/kernel/kernel_registry/cpu/generic/pad_kernel_registry.cpp
+        src/kernel/kernel_registry/cpu/generic/slice_kernel_registry.cpp
+        # avx512
+        src/kernel/kernel_registry/cpu/avx512/elementwise_kernel_registry.cpp
+        src/kernel/kernel_registry/cpu/avx512/clip_kernel_registry.cpp
+        src/kernel/kernel_registry/cpu/avx512/con2D_kernel_registry.cpp
         #memory allocator
         src/memory/memory_allocator/memory_allocator_util.cpp
         src/memory/memory_allocator/cpu_memory_allocator.cpp

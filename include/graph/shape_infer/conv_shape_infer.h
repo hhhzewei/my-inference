@@ -9,7 +9,7 @@
 
 namespace my_inference {
     class ConvShapeInfer : public ShapeInfer, public Singleton<ConvShapeInfer> {
-        DECLARE_SINGLETON(ConvShapeInfer)
+        DECLARE_SINGLETON(ConvShapeInfer);
 
     public:
         void operator()(OpNode *) override;

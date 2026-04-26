@@ -16,6 +16,7 @@ namespace my_inference {
         KernelShape,
         Pads,
         Strides,
+        Layout,
         // gemm
         TransA,
         TransB,
@@ -26,6 +27,8 @@ namespace my_inference {
         // reduce
         Axes,
         KeepDims,
+        // transpose,
+        Perm
     };
 
     inline AttributeKey getAttributeKey(const std::string &name) {

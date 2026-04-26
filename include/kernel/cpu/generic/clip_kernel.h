@@ -13,13 +13,13 @@ namespace my_inference::cpu::generic {
     template<typename T>
     class ClipKernel : public OpKernel {
     public:
-        explicit ClipKernel(const OpNode *op) : N(op->input(0)->numData().value()) {
+        explicit ClipKernel(const OpNode *op) : OpKernel(op), N(op->input(0)->numData().value()) {
         }
 
         void operator()(const KernelParam &ctx) override {
-            primitive::clip(static_cast<T *>(ctx.inputs[0].tensor),
-                            static_cast<T *>(ctx.inputs[1].tensor), static_cast<T *>(ctx.inputs[2].tensor),
-                            static_cast<T *>(ctx.outputs[0].tensor),
+            primitive::clip(static_cast<T *>(ctx.inputs[0]),
+                            static_cast<T *>(ctx.inputs[1]), static_cast<T *>(ctx.inputs[2]),
+                            static_cast<T *>(ctx.outputs[0]),
                             N);
         }
 

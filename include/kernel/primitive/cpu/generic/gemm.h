@@ -7,12 +7,23 @@
 #include <cstdint>
 
 namespace my_inference::cpu::generic::primitive {
+    struct GemmArgs {
+        int64_t M;
+        int64_t K;
+        int64_t N;
+        float alpha;
+        float beta;
+        int64_t bias_stride[2];
+    };
+
     template<typename T, bool TransA, bool TransB>
     void gemm(const T *a, const T *b,
-              const T *bias, const int64_t bias_stride_0, const int64_t bias_stride_1,
+              const T *bias,
               T *y,
-              const int64_t M, const int64_t K, const int64_t N,
-              const float alpha, const float beta) {
+              const GemmArgs args) {
+        const int64_t M = args.M;
+        const int64_t K = args.K;
+        const int64_t N = args.N;
         int64_t strideA[2] = {K, 1};
         if (TransA) {
             strideA[0] = 1;
@@ -29,7 +40,7 @@ namespace my_inference::cpu::generic::primitive {
                 for (int k = 0; k < K; ++k) {
                     ret += a[i * strideA[0] + k * strideA[1]] * b[k * strideB[0] + j * strideB[1]];
                 }
-                y[i * N + j] = alpha * ret + beta * bias[i * bias_stride_0 + j * bias_stride_1];
+                y[i * N + j] = args.alpha * ret + args.beta * bias[i * args.bias_stride[0] + j * args.bias_stride[1]];
             }
         }
     }

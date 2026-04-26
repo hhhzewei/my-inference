@@ -41,7 +41,4 @@ void IdentityShapeInfer::operator()(OpNode *op) {
     for (TensorNode *output: op->outputs()) {
         output->setShape(expected_shape);
     }
-    const std::vector<TensorDim> stride = defaultStride(expected_shape);
-    op->setInputsStrides(std::vector(op->numInput(), stride));
-    op->setOutputsStrides(std::vector(op->numOutput(), stride));
 }

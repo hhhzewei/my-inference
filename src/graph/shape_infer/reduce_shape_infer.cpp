@@ -8,10 +8,10 @@
 
 using namespace my_inference;
 
-REGISTER_SHAPE_INFER(OpType::ReduceMax,&ReduceShapeInfer::instance());
-REGISTER_SHAPE_INFER(OpType::ReduceMin,&ReduceShapeInfer::instance());
-REGISTER_SHAPE_INFER(OpType::ReduceMean,&ReduceShapeInfer::instance());
-REGISTER_SHAPE_INFER(OpType::ReduceSum,&ReduceShapeInfer::instance());
+REGISTER_SHAPE_INFER(OpType::ReduceMax, &ReduceShapeInfer::instance());
+REGISTER_SHAPE_INFER(OpType::ReduceMin, &ReduceShapeInfer::instance());
+REGISTER_SHAPE_INFER(OpType::ReduceMean, &ReduceShapeInfer::instance());
+REGISTER_SHAPE_INFER(OpType::ReduceSum, &ReduceShapeInfer::instance());
 
 void ReduceShapeInfer::operator()(OpNode *op) {
     const bool keep_dim = op->attribute<int64_t>(AttributeKey::KeepDims).value();

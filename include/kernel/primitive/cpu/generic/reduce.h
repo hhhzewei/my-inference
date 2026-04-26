@@ -6,13 +6,19 @@
 #define MY_INFERENCE_REDUCE_H
 #include <cstdint>
 
+#include "kernel/kernel_args/reduce_args.h"
+
 namespace my_inference::cpu::generic::primitive {
+
     template<typename T, typename ReducePolicy>
     void reduce(T *input, T *output,
-                const int64_t Outer, const int64_t Reduce, const int64_t Inner) {
+                const ReduceArgs args) {
         typename ReducePolicy::BinaryFunctor binary_functor;
         typename ReducePolicy::PostFunctor post_functor;
         constexpr T InitValue = ReducePolicy::InitValue;
+        const int64_t Reduce = args.Reduce;
+        const int64_t Inner = args.Inner;
+        const int64_t Outer = args.Outer;
         const int64_t stride[2] = {Reduce * Inner, Inner};
         for (int64_t outer = 0; outer < Outer; ++outer) {
             for (int64_t inner = 0; inner < Inner; ++inner) {

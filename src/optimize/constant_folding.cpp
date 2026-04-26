@@ -1,11 +1,15 @@
 //
 // Created by hzw on 2026/2/18.
 //
+
 #include "optimize/constant_folding.h"
+#include "optimize/optimizer_util.h"
 #include "optimize/constant_folder/op_folder.h"
 #include "optimize/constant_folder/op_folder_util.h"
 
 using namespace my_inference;
+
+REGISTER_OPTIMIZER(PassType::ConstantFolding, &ConstantFolding::instance());
 
 void ConstantFolding::operator()(Graph *graph) {
     auto op_func = [&](OpNode *op) {
@@ -26,7 +30,7 @@ void ConstantFolding::operator()(Graph *graph) {
         }
         // create constant node and replace output's producer
         for (TensorNode *output: op->outputs()) {
-            const auto producer = graph->createOp(OpType::Constant, {}, {output}, {});
+            const auto producer = graph->createOp(OpType::Constant, {}, {output});
             graph->replaceProducer(output, producer, 0);
         }
         // remove op from consumer of input

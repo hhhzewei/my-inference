@@ -7,10 +7,11 @@
 
 namespace my_inference {
     enum class PassType {
-        DEAD_CODE_ELIMINATION,
-        CONSTANT_FOLDING,
-        COMMON_SUBEXPRESSION_ELIMINATION,
-        OP_FUSION
+        DeadCodeElimination,
+        ConstantFolding,
+        CommonSubexpressionElimination,
+        OpFusion,
+        ConvLayoutOptimize,
     };
 }
 

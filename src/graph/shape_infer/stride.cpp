@@ -10,6 +10,9 @@
 using namespace my_inference;
 
 void my_inference::initStrides(OpNode *op) {
+    if (op->isConstant()) {
+        return;
+    }
     // input strides
     std::vector<std::vector<TensorDim> > inputs_strides;
     inputs_strides.reserve(op->numInput());
@@ -52,12 +55,10 @@ std::vector<TensorDim> my_inference::broadcastStride(const std::vector<TensorDim
     std::vector strides(numDim, TensorDim(0));
     TensorDim stride(1);
     for (int i = 0; i < numDim; ++i) {
-        TensorDim dim(1); // 不存在默认为1
-        if (const int idx = static_cast<int>(shape.size()) - 1 - i; idx >= 0) {
-            dim = shape[idx];
-        }
+        const int idx = static_cast<int>(shape.size()) - 1 - i;
+        TensorDim dim = idx >= 0 ? shape[idx] : TensorDim(1); // 不存在默认为1
         const int out_idx = numDim - 1 - i;
-        if (const TensorDim &out_dim = expected_shape[out_idx]; dim == out_dim) {
+        if (expected_shape[out_idx] == dim) {
             strides[out_idx] = stride; //正常维度
             stride = stride * dim;
         } else if (dim.isValue() && dim.value() == 1) {

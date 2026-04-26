@@ -9,7 +9,7 @@
 
 namespace my_inference {
     class BroadcastShapeInfer : public ShapeInfer, public Singleton<BroadcastShapeInfer> {
-        DECLARE_SINGLETON(BroadcastShapeInfer)
+        DECLARE_SINGLETON(BroadcastShapeInfer);
 
     public:
         void operator()(OpNode *) override;

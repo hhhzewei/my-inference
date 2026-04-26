@@ -11,22 +11,22 @@
 namespace my_inference {
     class TensorMemoryInfo {
     public:
-        TensorMemoryInfo(TensorDim size, const int align_size) : size_(std::move(size)), align_size_(align_size) {
+        explicit TensorMemoryInfo(TensorDim size) : size_(std::move(size)) {
         }
 
-        [[nodiscard]] int startTime() const {
+        [[nodiscard]] int64_t startTime() const {
             return life_cycle_.first;
         }
 
-        [[nodiscard]] int endTime() const {
+        [[nodiscard]] int64_t endTime() const {
             return life_cycle_.second;
         }
 
-        void updateStartTime(const int idx) {
+        void updateStartTime(const int64_t idx) {
             life_cycle_.first = std::min(life_cycle_.first, idx);
         }
 
-        void updateEndTime(const int idx) {
+        void updateEndTime(const int64_t idx) {
             life_cycle_.second = std::max(life_cycle_.second, idx);
         }
 
@@ -46,14 +46,13 @@ namespace my_inference {
             offset_ = new_offset;
         }
 
-        [[nodiscard]] int alignSize() const {
-            return align_size_;
+        void updateSize(const TensorDim &new_size) {
+            size_ = new_size;
         }
 
     private:
         TensorDim size_{1};
-        int align_size_ = 1;
-        std::pair<int, int> life_cycle_{INT_MAX, -1};
+        std::pair<int64_t, int64_t> life_cycle_{INT_MAX, -1};
         int64_t offset_ = -1;
     };
 }

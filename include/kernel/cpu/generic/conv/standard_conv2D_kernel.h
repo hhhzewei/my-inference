@@ -15,14 +15,10 @@ namespace my_inference::cpu::generic {
         }
 
         void operator()(const KernelParam &ctx) override {
-            void *bias = ctx.inputs.size() == 2 ? nullptr : ctx.inputs[2].tensor;
-            primitive::standard_conv2D(static_cast<T *>(ctx.inputs[0].tensor), static_cast<T *>(ctx.inputs[1].tensor),
-                                       static_cast<T *>(bias), static_cast<T *>(ctx.outputs[0].tensor),
-                                       N, C_IN, H_IN, W_IN,
-                                       C_OUT, H_OUT, W_OUT,
-                                       K_H, K_W, PAD_UP, PAD_DOWN, PAD_LEFT, PAD_RIGHT,
-                                       STRIDE_H, STRIDE_W,
-                                       DILATION_H, DILATION_W);
+            void *bias = ctx.inputs.size() == 2 ? nullptr : ctx.inputs[2];
+            primitive::standard_conv2D(static_cast<T *>(ctx.inputs[0]), static_cast<T *>(ctx.inputs[1]),
+                                       static_cast<T *>(bias), static_cast<T *>(ctx.outputs[0]),
+                                       args_);
         }
     };
 }

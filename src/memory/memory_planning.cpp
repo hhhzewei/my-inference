@@ -11,7 +11,7 @@ int64_t my_inference::planMemoryOffset(std::vector<TensorMemoryInfo *> memory_in
         return m1->size().value() > m2->size().value();
     });
     auto cmpFunc = [](const TensorMemoryInfo *m1, const TensorMemoryInfo *m2) { return m1->offset() < m2->offset(); };
-    std::multiset<TensorMemoryInfo *, decltype(cmpFunc)> set(cmpFunc);
+    std::multiset<TensorMemoryInfo *, decltype(cmpFunc)> set(cmpFunc); // 相同offset的Memory Info共存
     int64_t res = 0;
     for (TensorMemoryInfo *m: memory_infos) {
         int64_t offset = 0;
@@ -28,7 +28,7 @@ int64_t my_inference::planMemoryOffset(std::vector<TensorMemoryInfo *> memory_in
             if (offset >= offset2 + size2) {
                 continue;
             }
-            const int align_size = m->alignSize();
+            constexpr auto align_size = 64;
             offset = offset2 + size2;
             offset = (offset + align_size - 1) / align_size * align_size;
         }

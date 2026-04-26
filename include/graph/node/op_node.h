@@ -20,27 +20,11 @@ namespace my_inference {
     public:
         using Id = uint32_t;
 
-        OpNode(const Id id, std::string name, const OpType &type,
-               const std::map<AttributeKey, AttributeValue> &attribute_map) : name_(std::move(name)), id_(id),
-                                                                              type_(type), attributes_(attribute_map) {
-        }
-
-        OpNode(const Id id, std::string name, const OpType &type,
+        OpNode(Id id, std::string name, const OpType &type,
                std::vector<TensorNode *> inputs, std::vector<TensorNode *> outputs,
-               std::map<AttributeKey, AttributeValue> attribute_map) : name_(std::move(name)), id_(id), type_(type),
-                                                                       inputs_(std::move(inputs)),
-                                                                       outputs_(std::move(outputs)),
-                                                                       attributes_(std::move(attribute_map)) {
-            initInput();
-        }
+               std::map<AttributeKey, AttributeValue> attribute_map);
 
-        void init(std::vector<TensorNode *> inputs, std::vector<TensorNode *> outputs) {
-            inputs_ = std::move(inputs);
-            outputs_ = std::move(outputs);
-            initInput();
-        }
-
-        const std::string &name() const {
+        [[nodiscard]] const std::string &name() const {
             return name_;
         }
 
@@ -72,10 +56,6 @@ namespace my_inference {
 
         [[nodiscard]] TensorNode *input(const int i) const {
             return inputs_[i];
-        }
-
-        void removeInput(const unsigned input_idx) {
-            inputs_[input_idx] = nullptr;
         }
 
         void replaceInput(const unsigned input_idx, TensorNode *new_input) {
@@ -135,7 +115,11 @@ namespace my_inference {
 
         template<typename T>
         void setAttribute(const AttributeKey &key, T value) {
-            attributes_.emplace(key, value);
+            if (const auto it = attributes_.find(key); it == attributes_.end()) {
+                attributes_.emplace(key, value);
+            } else {
+                it->second = value;
+            }
         }
 
 
@@ -145,20 +129,6 @@ namespace my_inference {
 
         [[nodiscard]] DataType dataType() const;
 
-        void setStridesOffset(std::vector<uint64_t> inputs_strides_offset,
-                              std::vector<uint64_t> outputs_strides_offset) {
-            inputs_strides_offset_ = std::move(inputs_strides_offset);
-            outputs_strides_offset_ = std::move(outputs_strides_offset);
-        }
-
-        [[nodiscard]] uint64_t inputStridesOffset(const int i) const {
-            return inputs_strides_offset_[i];
-        }
-
-        [[nodiscard]] uint64_t outputStridesOffset(const int i) const {
-            return outputs_strides_offset_[i];
-        }
-
     private:
         void initInput();
 
@@ -167,10 +137,8 @@ namespace my_inference {
         OpType type_;
         std::vector<TensorNode *> inputs_;
         std::vector<std::vector<TensorDim> > inputs_strides_;
-        std::vector<uint64_t> inputs_strides_offset_;
         std::vector<TensorNode *> outputs_;
         std::vector<std::vector<TensorDim> > outputs_strides_;
-        std::vector<uint64_t> outputs_strides_offset_;
         std::map<AttributeKey, AttributeValue> attributes_;
     };
 }

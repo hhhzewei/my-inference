@@ -4,8 +4,13 @@
 
 
 #include "optimize/common_subexpression_elimination.h"
+#include "optimize/optimizer_util.h"
 
-void my_inference::CommonSubexpressionElimination::operator()(Graph *graph) {
+using namespace my_inference;
+
+REGISTER_OPTIMIZER(PassType::CommonSubexpressionElimination, &CommonSubexpressionElimination::instance());
+
+void CommonSubexpressionElimination::operator()(Graph *graph) {
     std::map<uint64_t, std::vector<OpNode *> > op_map;
     auto op_func = [&](OpNode *op) {
         if (op->type() == OpType::Source || op->type() == OpType::Sink || op->type() == OpType::Constant) { return; }
@@ -48,16 +53,13 @@ uint64_t my_inference::CommonSubexpressionElimination::hash(const OpNode *op) {
     for (const auto &[key,attr]: op->attributeMap()) {
         if (attr.isFloat()) {
             hash_combine(seed, attr.get<float>());
-        }
-        else if (attr.isInt()) {
+        } else if (attr.isInt()) {
             hash_combine(seed, attr.get<int64_t>());
-        }
-        else if (attr.isFloatVec()) {
+        } else if (attr.isFloatVec()) {
             for (float value: attr.get<std::vector<float> >()) {
                 hash_combine(seed, value);
             }
-        }
-        else if (attr.isIntVec()) {
+        } else if (attr.isIntVec()) {
             for (int64_t value: attr.get<std::vector<int64_t> >()) {
                 hash_combine(seed, value);
             }

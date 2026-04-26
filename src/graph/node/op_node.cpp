@@ -4,6 +4,19 @@
 #include "graph/node/op_node.h"
 #include "graph/node/tensor_node.h"
 
+my_inference::OpNode::OpNode(const Id id, std::string name, const OpType &type, std::vector<TensorNode *> inputs,
+                             std::vector<TensorNode *> outputs,
+                             std::map<AttributeKey, AttributeValue> attribute_map) : name_(std::move(name)), id_(id),
+    type_(type),
+    inputs_(std::move(inputs)),
+    outputs_(std::move(outputs)),
+    attributes_(std::move(attribute_map)) {
+    for (int i = 0; i < outputs_.size(); ++i) {
+        outputs_[i]->init(this, i);
+    }
+    initInput();
+}
+
 int my_inference::OpNode::numConsumer() const {
     int result = 0;
     for (const auto output: outputs_) {

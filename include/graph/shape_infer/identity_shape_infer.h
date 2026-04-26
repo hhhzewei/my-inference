@@ -9,7 +9,7 @@
 
 namespace my_inference {
     class IdentityShapeInfer : public ShapeInfer, public Singleton<IdentityShapeInfer> {
-        DECLARE_SINGLETON(IdentityShapeInfer)
+        DECLARE_SINGLETON(IdentityShapeInfer);
 
     public:
         void operator()(OpNode *) override;

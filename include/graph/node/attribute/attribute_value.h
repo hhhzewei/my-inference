@@ -14,6 +14,12 @@ namespace my_inference {
         explicit AttributeValue(T value) : value_(value) {
         }
 
+        template<typename T>
+        AttributeValue &operator=(T value) {
+            value_ = value;
+            return *this;
+        }
+
 
         [[nodiscard]] bool isFloat() const {
             return value_.index() == 0;

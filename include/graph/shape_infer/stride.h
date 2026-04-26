@@ -14,5 +14,5 @@ namespace my_inference {
     std::vector<TensorDim> defaultStride(const std::vector<TensorDim> &shape);
 
     std::vector<TensorDim> broadcastStride(const std::vector<TensorDim> &shape,
-                                            const std::vector<TensorDim> &expected_shape);
+                                           const std::vector<TensorDim> &expected_shape);
 }

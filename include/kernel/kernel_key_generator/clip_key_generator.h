@@ -4,8 +4,7 @@
 
 #ifndef MY_INFERENCE_CLIP_KEY_GENERATOR_H
 #define MY_INFERENCE_CLIP_KEY_GENERATOR_H
-#include "graph/node/tensor_node.h"
-#include "kernel/kernel_util.h"
+#include "util/op_sub_type.h"
 #include "kernel/kernel_key_generator/kernel_key_generator.h"
 #include "util/singleton.h"
 
