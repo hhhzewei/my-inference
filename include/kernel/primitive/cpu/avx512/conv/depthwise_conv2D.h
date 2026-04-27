@@ -13,14 +13,18 @@ namespace my_inference::cpu::avx512::primitive {
         using traits = Traits<T>;
         constexpr int64_t num_per_vec = traits::NumPerVec;
         const int64_t C = args.C_IN;
-        for (int64_t n = 0; n < args.N; ++n) {
-            const int64_t n_in_offset = n * args.H_IN * args.W_IN * C;
-            const int64_t n_out_offset = n * args.H_OUT * args.W_OUT * C;
-            for (int64_t h_out = 0; h_out < args.H_OUT; ++h_out) {
-                int64_t h_out_offset = h_out * args.W_OUT * C;
-                for (int64_t w_out = 0; w_out < args.W_OUT; ++w_out) {
-                    int64_t w_out_offset = w_out * C;
+        const int64_t N=args.N;
+        const int64_t H_OUT=args.H_OUT;
+        const int64_t W_OUT=args.W_OUT;
+#pragma omp parallel for collapse(2)
+        for (int64_t n = 0; n < N; ++n) {
+            for (int64_t h_out = 0; h_out < H_OUT; ++h_out) {
+                for (int64_t w_out = 0; w_out < W_OUT; ++w_out) {
                     for (int64_t c_offset = 0; c_offset < C; c_offset += num_per_vec) {
+                        const int64_t n_in_offset = n * args.H_IN * args.W_IN * C;
+                        const int64_t n_out_offset = n * args.H_OUT * args.W_OUT * C;
+                        const int64_t h_out_offset = h_out * args.W_OUT * C;
+                        const int64_t w_out_offset = w_out * C;
                         auto y_vec = traits::setzero();
                         for (int64_t h_k = 0; h_k < args.H_K; ++h_k) {
                             const int64_t h_k_offset = h_k * args.W_K * C;

@@ -4,6 +4,7 @@
 
 #ifndef MY_INFERENCE_REDUCE_KERNEL_H
 #define MY_INFERENCE_REDUCE_KERNEL_H
+#include "backend/isa_traits/cpu_traits.h"
 #include "graph/node/op_node.h"
 #include "graph/node/tensor_node.h"
 #include "kernel/op_kernel.h"
@@ -14,7 +15,7 @@ namespace my_inference::cpu::generic {
     template<typename T, typename ReducePolicy>
     class ReduceKernel : public OpKernel {
     public:
-        explicit ReduceKernel(const OpNode *op): OpKernel(op) {
+        explicit ReduceKernel(const OpNode *op) : OpKernel(op) {
             std::vector<int64_t> axes = op->attribute<std::vector<int64_t> >(AttributeKey::Axes).value();
             auto &shape = op->input(0)->shape();
             int axe = 0;
@@ -51,7 +52,8 @@ namespace my_inference::cpu::generic {
 
     template<typename T>
     struct ReduceMaxPolicy {
-        using BinaryFunctor = MaxFunctor<T>;
+        using Traits = Traits<T>;
+        using BinaryFunctor = MaxFunctor<Traits>;
         using PostFunctor = IdentityFunctor<T>;
         constexpr static T InitValue = std::numeric_limits<T>::min();
     };
@@ -61,7 +63,8 @@ namespace my_inference::cpu::generic {
 
     template<typename T>
     struct ReduceMinPolicy {
-        using BinaryFunctor = MinFunctor<T>;
+        using Traits = Traits<T>;
+        using BinaryFunctor = MinFunctor<Traits>;
         using PostFunctor = IdentityFunctor<T>;
         constexpr static T InitValue = std::numeric_limits<T>::max();
     };
@@ -71,8 +74,9 @@ namespace my_inference::cpu::generic {
 
     template<typename T>
     struct ReduceMeanPolicy {
-        using BinaryFunctor = AddFunctor<T>;
-        using PostFunctor = DivFunctor<T>;
+        using Traits = Traits<T>;
+        using BinaryFunctor = AddFunctor<Traits>;
+        using PostFunctor = DivFunctor<Traits>;
         constexpr static T InitValue = 0;
     };
 
@@ -82,7 +86,8 @@ namespace my_inference::cpu::generic {
 
     template<typename T>
     struct ReduceSumPolicy {
-        using BinaryFunctor = AddFunctor<T>;
+        using Traits = Traits<T>;
+        using BinaryFunctor = AddFunctor<Traits>;
         using PostFunctor = IdentityFunctor<T>;
         constexpr static T InitValue = 0;
     };

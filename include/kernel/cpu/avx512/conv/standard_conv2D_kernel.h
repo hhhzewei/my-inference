@@ -4,7 +4,7 @@
 #pragma once
 
 #include "kernel/cpu/avx512/conv/conv2D_base_kernel.h"
-#include "kernel/primitive/cpu/avx512/conv/standard_conv2D_kernel.h"
+#include "kernel/primitive/cpu/avx512/conv/standard_conv2D.h"
 
 namespace my_inference::cpu::avx512 {
     template<typename T>

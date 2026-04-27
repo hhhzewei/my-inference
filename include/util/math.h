@@ -15,60 +15,59 @@ namespace my_inference {
         }
     };
 
-    template<typename T>
+    template<typename Traits>
     struct AddFunctor {
-        T operator()(const T a, const T b) {
-            return a + b;
+        using VecType = typename Traits::VecType;
+        VecType operator()(const VecType a, VecType b) {
+            return Traits::add(a, b);
         }
     };
 
-    template<typename T>
+    template<typename Traits>
     struct SubFunctor {
-        T operator()(const T a, const T b) {
-            return a - b;
+        using VecType = typename Traits::VecType;
+        VecType operator()(const VecType a, VecType b) {
+            return Traits::sub(a, b);
         }
     };
 
-    template<typename T>
+    template<typename Traits>
     struct MulFunctor {
-        T operator()(const T a, const T b) {
-            return a * b;
+        using VecType = typename Traits::VecType;
+        VecType operator()(const VecType a, VecType b) {
+            return Traits::mul(a, b);
         }
     };
 
-    template<typename T>
+    template<typename Traits>
     struct DivFunctor {
-        T operator()(const T a, const T b) {
-            return a / b;
+        using VecType = typename Traits::VecType;
+        VecType operator()(const VecType a, VecType b) {
+            return Traits::div(a, b);
         }
     };
 
-    template<typename T>
+    template<typename Traits>
     struct Relu6Functor {
-        T operator()(const T x) {
-            return x < 0 ? 0 : x > 6 ? 6 : x;
+        using VecType = typename Traits::VecType;
+        VecType operator()(const VecType a, VecType b) {
+            return Traits::relu6(a, b);
         }
     };
 
-    template<typename T>
+    template<typename Traits>
     struct MaxFunctor {
-        T operator()(const T x, const T y) {
-            if constexpr (std::is_same_v<T, float>) {
-                return fmaxf(x, y);
-            } else {
-                return x > y ? x : y;
-            }
+        using VecType = typename Traits::VecType;
+        VecType operator()(const VecType a, VecType b) {
+            return Traits::max(a, b);
         }
     };
 
-    template<typename T>
+    template<typename Traits>
     struct MinFunctor {
-        T operator()(const T x, const T y) {
-            if constexpr (std::is_same_v<T, float>) {
-                return fminf(x, y);
-            } else {
-                return x < y ? x : y;
-            }
+        using VecType = typename Traits::VecType;
+        VecType operator()(const VecType a, VecType b) {
+            return Traits::min(a, b);
         }
     };
 }

@@ -76,17 +76,19 @@ bool Graph::run(const std::vector<void *> &inputs, const std::vector<void *> &ou
         memory_allocator_->memCpy(memory_info->offset() + tensor_memory_pointer_, inputs[i],
                                   memory_info->size_value());
     }
-    std::map<OpType, size_t> time_map;
+    std::map<OpType, int64_t> time_map;
+    int64_t total_time = 0;
     for (auto &[kernel,param]: kernel_sequence_) {
         auto start = std::chrono::steady_clock::now();
         (*kernel)(param);
         auto end = std::chrono::steady_clock::now();
-            const auto time = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        const auto time = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
         if (auto it = time_map.find(kernel->op()->type()); it != time_map.end()) {
             it->second += time;
         } else {
-            time_map.emplace(kernel->op()->type(),time);
+            time_map.emplace(kernel->op()->type(), time);
         }
+        total_time += time;
     }
     // load output
     for (int i = 0; i < sinkOp_->numInput(); ++i) {

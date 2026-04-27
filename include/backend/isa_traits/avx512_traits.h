@@ -10,7 +10,6 @@
 namespace my_inference::cpu::avx512 {
     template<typename T>
     struct TraitBase {
-        using VecType = __m512;
         constexpr static int64_t VecSize = 64;
         constexpr static int64_t NumPerVec = VecSize / sizeof(T);
     };
@@ -21,13 +20,14 @@ namespace my_inference::cpu::avx512 {
 
     template<>
     struct Traits<float> : TraitBase<float> {
+        using VecType = __m512;
         using MaskType = __mmask16;
 
         static VecType load(const void *p) {
             return _mm512_load_ps(p);
         }
 
-        static void store(void *p, VecType vec) {
+        static void store(void *p, const VecType vec) {
             _mm512_store_ps(p, vec);
         }
 

@@ -105,5 +105,14 @@ set(ONNX_RUNTIME_ROOT "D:/CppDevelop/Lib/onnxruntime-win-x64-1.24.4")
 include_directories("${ONNX_RUNTIME_ROOT}/include")
 link_directories("${ONNX_RUNTIME_ROOT}/lib")
 
+#open mp
+find_package(OpenMP REQUIRED)
+target_link_libraries(my_inference PRIVATE OpenMP::OpenMP_CXX)
+if(MSVC)
+    # 因为标准的 OpenMP::OpenMP_CXX 默认给的是旧的 /openmp
+    # 我们需要手动覆盖为现代的 /openmp:llvm
+    target_compile_options(my_inference PRIVATE /openmp:llvm)
+endif()
+
 add_subdirectory(test/MobileNet-v2)
 add_subdirectory(test/optimize)

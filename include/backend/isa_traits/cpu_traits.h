@@ -9,24 +9,49 @@
 namespace my_inference::cpu::generic {
     template<typename T>
     struct Traits {
-        static T relu6(T x) {
-            return x < 0 ? 0 : x > 6 ? 6 : x;
+        using VecType = T;
+
+        static T load(const T *p) {
+            return *p;
         }
 
-        static T add(T a, T b) {
+        static T store(T *p, const T value) {
+            return *p = value;
+        }
+
+        static T add(const T a, const T b) {
             return a + b;
         }
 
-        static T sub(T a, T b) {
+        static T sub(const T a, const T b) {
             return a - b;
         }
 
-        static T mul(T a, T b) {
+        static T mul(const T a, const T b) {
             return a * b;
         }
 
-        static T div(T a, T b) {
+        static T div(const T a, const T b) {
             return a / b;
+        }
+
+        static T max(const T a, const T b) {
+            if constexpr (std::is_same_v<T, float>) {
+                return fmaxf(a, b);
+            }
+            return std::max(a, b);
+        }
+
+        static T min(const T x, const T y) {
+            if constexpr (std::is_same_v<T, float>) {
+                return fminf(x, y);
+            } else {
+                return std::min(x, y);
+            }
+        }
+
+        static T relu6(const T x) {
+            return x < 0 ? 0 : x > 6 ? 6 : x;
         }
 
         template<UnaryOpType op_type>
@@ -38,7 +63,7 @@ namespace my_inference::cpu::generic {
         }
 
         template<BinaryOpType op_type>
-        static T binaryOp(T a, T b) {
+        static T binaryOp(const T a, const T b) {
             if constexpr (op_type == BinaryOpType::Add) {
                 return Traits::add(a, b);
             }
